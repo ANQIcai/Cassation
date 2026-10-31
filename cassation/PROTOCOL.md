@@ -105,7 +105,7 @@ OnDelta = Callable[[str], Awaitable[None]]
 ```
 
 - Class names are pinned: `MockModelClient(cfg)` in mock_client.py, `GeminiModelClient(cfg)` in gemini_client.py. `meta.json` ownership: the process that starts the run owns it (server for server runs, cli for CLI runs), written merge-safely.
-- `mock_client.py` — `MockModelClient(cfg)`: canned-but-plausible everyday demo content (air-fryer vs oven running costs), per-call latencies (decompose ~6s, leaves 4–12s jittered, clerk <1s, synthesis ~10s streamed) all divided by `cfg.mock_speed`; one guaranteed dispute (the running-cost claim); deterministic enough for tests.
+- `mock_client.py` — `MockModelClient(cfg)`: canned-but-plausible everyday demo content (e-bike battery charging safety), per-call latencies (decompose ~6s, leaves 4–12s jittered, clerk <1s, synthesis ~10s streamed) all divided by `cfg.mock_speed`; one guaranteed dispute (the running-cost claim); deterministic enough for tests.
 - `gemini_client.py` — same protocol over `google-genai` Interactions API per `vendor/gemini-skills/skills/gemini-api-dev/SKILL.md`: judge chain keeps `previous_interaction_id` across decompose → replan → synthesize; leaves = `gemini-3.8-flash` + Google Search tool + structured output; clerk = `gemini-3.5-flash-lite`; `thinking_level` from cfg. Grounding metadata → `grounding_shim.py` (exact quote + URL when present; degrade to `provenance="model-reported"` + domain link). **Cannot be run before kickoff — mark every assumption `# VERIFY-AT-KICKOFF` and keep all of them listed in `docs/demo/kickoff-checklist.md`.**
 - `replay.py` — read trace.jsonl, re-emit through a Bus at recorded `t` cadence × 1/speed (don't re-append to disk when replaying: Bus gets `record=False` mode).
 

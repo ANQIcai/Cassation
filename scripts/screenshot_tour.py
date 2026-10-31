@@ -37,7 +37,7 @@ REPO = Path(__file__).resolve().parents[1]
 VENV_PY = REPO / ".venv" / "bin" / "python"
 RUNS_DIR = REPO / "runs"
 
-QUESTION = ("Is an air fryer really cheaper to run than an electric oven?")
+QUESTION = ("Is it safe to charge an e-bike battery indoors overnight?")
 
 # struck in beat 02: c9 depends on c8, so the dep-warning tag shows, and the
 # guaranteed mock dispute (c2) is untouched so beats 05/06 still fire.

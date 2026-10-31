@@ -717,5 +717,95 @@
    "est_total_cost_gbp": 0.9,
    "est_agents": 18
   }
+ },
+ "is it safe to charge an e-bike battery indoors overnight?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T16:41:45",
+  "graph": {
+   "question": "Is it safe to charge an e-bike battery indoors overnight?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "UK e-bike and e-scooter battery fires rose sharply: London Fire Brigade attended one roughly every two days in 2023/24.",
+     "branch": "fire-risk data",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "Charging a certified (UL/EN 50604) e-bike battery indoors is safe.",
+     "branch": "charging practice",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Most e-bike battery fires involve damaged, aftermarket or mismatched chargers and packs, not certified originals.",
+     "branch": "battery chemistry",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Once a lithium battery enters thermal runaway it cannot be extinguished by normal domestic means, and the vented vapour cloud can ignite in seconds.",
+     "branch": "battery chemistry",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "UK regulation lags the risk: there is no mandatory third-party certification for e-bike conversion kits at the point of sale.",
+     "branch": "regulation",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "Charging in hallways or exits puts the fire between you and the only escape route — the main factor in fatal e-bike fires.",
+     "branch": "charging practice",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "Insurers increasingly exclude or void claims where an uncertified e-bike battery was charged indoors.",
+     "branch": "insurance",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "E-bike batteries explode spontaneously even when they are not charging.",
+     "branch": "scare stories",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "The safe-practice consensus: charge while awake and present, use the original charger, keep the battery away from exits, and stop at any sign of damage or heat.",
+     "branch": "safe practice",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
  }
 }
