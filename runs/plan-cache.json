@@ -807,5 +807,183 @@
    "est_total_cost_gbp": 0.9,
    "est_agents": 18
   }
+ },
+ "is it safe to charge an e-bike battery indoors overnight at ~1300 w/mk room temperature?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T18:20:13",
+  "graph": {
+   "question": "Is it safe to charge an e-bike battery indoors overnight at ~1300 W/mK room temperature?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "UK e-bike and e-scooter battery fires rose sharply: London Fire Brigade attended one roughly every two days in 2023/24.",
+     "branch": "fire-risk data",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "Charging a certified (UL/EN 50604) e-bike battery indoors is safe.",
+     "branch": "charging practice",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Most e-bike battery fires involve damaged, aftermarket or mismatched chargers and packs, not certified originals.",
+     "branch": "battery chemistry",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Once a lithium battery enters thermal runaway it cannot be extinguished by normal domestic means, and the vented vapour cloud can ignite in seconds.",
+     "branch": "battery chemistry",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "UK regulation lags the risk: there is no mandatory third-party certification for e-bike conversion kits at the point of sale.",
+     "branch": "regulation",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "Charging in hallways or exits puts the fire between you and the only escape route — the main factor in fatal e-bike fires.",
+     "branch": "charging practice",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "Insurers increasingly exclude or void claims where an uncertified e-bike battery was charged indoors.",
+     "branch": "insurance",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "E-bike batteries explode spontaneously even when they are not charging.",
+     "branch": "scare stories",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "The safe-practice consensus: charge while awake and present, use the original charger, keep the battery away from exits, and stop at any sign of damage or heat.",
+     "branch": "safe practice",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ },
+ "does the amyloid-beta assembly aβ*56 cause memory loss in alzheimer's disease?": {
+  "mode": "live",
+  "recorded_at": "2026-10-31T18:17:21",
+  "graph": {
+   "question": "Does the amyloid-beta assembly Aβ*56 cause memory loss in Alzheimer's disease?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "Lesné et al. (2006) isolated a 56-kDa soluble amyloid-beta dodecamer (Aβ*56) from Tg2576 mouse brains that correlated with spatial memory deficits before plaque formation.",
+     "branch": "Foundational evidence",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c2",
+     "text": "Purified Aβ*56 injected intracerebroventricularly into young healthy rats impaired long-term spatial memory retention in the Morris water maze within 24 hours in the 2006 Nature study.",
+     "branch": "Foundational evidence",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c3",
+     "text": "Independent laboratories using size-exclusion chromatography and mass spectrometry routinely fail to detect native Aβ*56 dodecamers in human Alzheimer's cerebrospinal fluid or brain extracts.",
+     "branch": "Replication & human data",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c4",
+     "text": "Western blot detection of Aβ*56 with antibodies 6E10 and A11 is prone to SDS-induced oligomerization artifacts rather than reflecting endogenous in vivo brain assemblies.",
+     "branch": "Replication & human data",
+     "depends_on": [
+      "c1",
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Wait et al. and subsequent post-mortem human cohort studies by the Ashe group reported Aβ*56 levels peaking in mild cognitive impairment and correlating with pathological soluble tau.",
+     "branch": "Replication & human data",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c6",
+     "text": "Forensic image analysis in 2022 identified duplicated and spliced Western blot bands across Figure 1 and Figure 4 of the foundational 2006 Nature Aβ*56 paper.",
+     "branch": "Integrity & retraction",
+     "depends_on": [
+      "c1",
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c7",
+     "text": "In June 2024, all co-authors except Sylvain Lesné retracted the 2006 Nature paper after determining the Aβ*56 behavioral and biochemical figures contained manipulated images.",
+     "branch": "Integrity & retraction",
+     "depends_on": [
+      "c6"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "FDA-approved anti-amyloid monoclonal antibodies lecanemab (2023) and donanemab (2024) target protofibrils and N3pG plaques respectively, rather than the Aβ*56 dodecamer.",
+     "branch": "Commercial outlook",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c9",
+     "text": "NIH R01 funding allocated to general amyloid-beta oligomer therapeutics exceeded $280 million in FY2022 despite emerging scrutiny of specific Aβ*56 sub-species.",
+     "branch": "Commercial outlook",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    }
+   ],
+   "est_total_cost_gbp": 0.6300000000000001,
+   "est_agents": 0
+  }
  }
 }

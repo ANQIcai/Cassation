@@ -1489,7 +1489,7 @@ function connect() {
 
 // ------------------------------------------------------------------ wiring
 
-const DEMO_QUESTION = "Is it safe to charge an e-bike battery indoors overnight?";
+const DEMO_QUESTION = "Does the amyloid-beta assembly Aβ*56 cause memory loss in Alzheimer's disease?";
 
 $("approve-btn").addEventListener("click", submitApproval);
 
