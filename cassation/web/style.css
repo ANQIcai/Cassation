@@ -4,20 +4,20 @@
    circles, the two human gates are amber diamonds. */
 
 :root {
-  --bg: #0b0b10;
-  --surface: #14141c;
-  --raised: #1b1b25;
-  --line: #26263a;
-  --ink: #ececf2;
-  --muted: #9a9ab0;
-  --gold: #d4a73c;
-  --green: #3fae6a;
-  --red: #d65151;
-  --amber: #e0a93e;
-  --grey: #6a6a7e;
-  --ink-serif: #d6d4ca;     /* the one reading ink: quotes, record, verdict body */
-  --ink-on-accent: #17120a; /* dark ink on gold/green/red fills */
-  --running: #8d8da6;       /* running-state grey (between --grey and --muted) */
+  --bg: #ffffff;
+  --surface: #f8fafd;
+  --raised: #f0f4f9;
+  --line: #dadce0;
+  --ink: #1f1f1f;
+  --muted: #444746;
+  --gold: #8a6100;
+  --green: #188038;
+  --red: #d93025;
+  --amber: #b06000;
+  --grey: #5f6368;
+  --ink-serif: #202124;     /* the one reading ink: quotes, record, verdict body */
+  --ink-on-accent: #ffffff; /* dark ink on gold/green/red fills */
+  --running: #5f6368;       /* running-state grey (between --grey and --muted) */
   --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
   --serif: Georgia, "Times New Roman", serif;
   --mono: ui-monospace, Consolas, Menlo, monospace;
@@ -247,11 +247,11 @@ body[data-view="board"] #hero { display: none; }
 .step.active .s-node {
   border-color: var(--ink);
   background: var(--ink);
-  box-shadow: 0 0 0 3px rgba(236, 236, 242, .18);
+  box-shadow: 0 0 0 3px rgba(31, 31, 31, .14);
   animation: ring 1.5s ease-in-out infinite;
 }
 @keyframes ring {
-  50% { box-shadow: 0 0 0 6px rgba(236, 236, 242, .07); }
+  50% { box-shadow: 0 0 0 6px rgba(31, 31, 31, .05); }
 }
 .step.wait .s-node {
   border-color: var(--amber);
@@ -598,7 +598,7 @@ body.gated #stage, body.gated #pipeline { filter: blur(3px); }
 /* claim states: 4px left border + pill color; 150ms crossfade */
 .claim.state-pending  { border-left-color: var(--grey); }
 .claim.state-running  { border-left-color: var(--running); }
-.claim.state-running .c-pill { color: var(--running); background: rgba(154, 154, 176, .16); }
+.claim.state-running .c-pill { color: var(--running); background: rgba(95, 99, 104, .12); }
 .claim.state-supported { border-left-color: var(--green); }
 .claim.state-supported .c-pill { color: var(--green); background: rgba(63, 174, 106, .14); }
 .claim.state-supported .cid { background: var(--green); }
@@ -625,7 +625,7 @@ body.gated #stage, body.gated #pipeline { filter: blur(3px); }
 .claim.state-human_ruled .cid { background: var(--gold); }
 
 /* standalone pill state colors (drawer header) — same tokens as the cards */
-.c-pill.pill-running     { color: var(--running); background: rgba(154, 154, 176, .16); }
+.c-pill.pill-running     { color: var(--running); background: rgba(95, 99, 104, .12); }
 .c-pill.pill-supported   { color: var(--green); background: rgba(63, 174, 106, .14); }
 .c-pill.pill-challenged  { color: var(--red);   background: rgba(214, 81, 81, .14); }
 .c-pill.pill-refuted     { color: var(--red);   background: rgba(214, 81, 81, .2); }
@@ -699,7 +699,7 @@ body.gated #stage, body.gated #pipeline { filter: blur(3px); }
   font: 800 11.5px/1.4 var(--serif);
   letter-spacing: .12em;
   color: var(--gold);
-  background: rgba(23, 18, 10, .95);
+  background: rgba(255, 248, 225, .97);
   text-transform: uppercase;
   z-index: 2;
 }
@@ -825,7 +825,7 @@ body.gated #stage, body.gated #pipeline { filter: blur(3px); }
   padding: 6px 14px;
   font: 700 13px/1 var(--sans);
   cursor: pointer;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, .5);
+  box-shadow: 0 3px 14px rgba(60, 64, 67, .18);
 }
 
 /* verdict tab */
@@ -1106,7 +1106,7 @@ a.cite:hover { background: rgba(212, 167, 60, .3); }
   width: min(520px, 92vw);
   background: var(--raised);
   border-left: 1px solid var(--line);
-  box-shadow: -18px 0 42px rgba(0, 0, 0, .55);
+  box-shadow: -18px 0 42px rgba(60, 64, 67, .18);
   z-index: 40;                 /* gates (50) and takeover (60) render above */
   display: flex;
   flex-direction: column;
@@ -1182,7 +1182,7 @@ a.cite:hover { background: rgba(212, 167, 60, .3); }
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(7, 7, 11, .7);
+  background: rgba(255, 255, 255, .72);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1198,7 +1198,7 @@ a.cite:hover { background: rgba(212, 167, 60, .3); }
   max-height: 92vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 70px rgba(0, 0, 0, .65);
+  box-shadow: 0 16px 70px rgba(60, 64, 67, .22);
 }
 .sheet.docket { border-top-color: var(--gold); width: min(1040px, 94vw); }
 .sheet-head {
@@ -1333,7 +1333,7 @@ a.cite:hover { background: rgba(212, 167, 60, .3); }
   position: fixed;
   inset: 0;
   z-index: 60;                /* above gates and drawer */
-  background: radial-gradient(ellipse at center, #1c0e12 0%, var(--bg) 75%);
+  background: radial-gradient(ellipse at center, #fde7e5 0%, var(--bg) 75%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1445,7 +1445,7 @@ a.cite:hover { background: rgba(212, 167, 60, .3); }
   border-radius: 8px;
   font-size: 16px;
   z-index: 80;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, .5);
+  box-shadow: 0 4px 24px rgba(60, 64, 67, .18);
 }
 
 /* ------------------------------------------- demo polish: plain-word slots */
@@ -1518,3 +1518,7 @@ body.verdict-stage #verdict-body h2 { font-size: clamp(28px, 2.4vw, 42px); line-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Light theme (31 Oct): soft Google-style elevation instead of dark glows; blur behind gates lighter */
+.card, .rec, #verdict { box-shadow: 0 1px 2px rgba(60,64,67,.12), 0 1px 3px 1px rgba(60,64,67,.06); }
+body.gated #stage, body.gated #pipeline { filter: blur(2px) brightness(1.02); }
