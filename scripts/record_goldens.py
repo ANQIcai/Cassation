@@ -20,10 +20,10 @@ from e2e_server import boot_server, drive_run, stop_server
 
 # (question variant, strike_index, gate_delay_s)
 GOLDENS = [
-    ("Is an air fryer really cheaper to run than ~1300 W/mK "
-     "at room temperature?", 0, 4.0),
-    ("Is an air fryer really cheaper to run than an electric oven?", 1, 3.0),
-    ("Is an air fryer really cheaper to run than an electric oven?", 2, 3.5),
+    ("Is it safe to charge an e-bike battery indoors overnight "
+     "at ~1300 W/mK room temperature?", 0, 4.0),
+    ("Is it safe to charge an e-bike battery indoors overnight?", 1, 3.0),
+    ("Is it safe to charge an e-bike battery indoors overnight?", 2, 3.5),
 ]
 
 

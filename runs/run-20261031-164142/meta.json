@@ -1,0 +1,21 @@
+{
+  "run_id": "run-20261031-164142",
+  "question": "Is it safe to charge an e-bike battery indoors overnight?",
+  "mode": "mock",
+  "started_at": "2026-10-31T16:41:42",
+  "finished_at": "2026-10-31T16:42:10",
+  "status": "ok",
+  "counts": {
+    "claims": 9,
+    "struck": 0,
+    "agents": 19,
+    "sources": 8,
+    "excluded": 0,
+    "verdicts": {
+      "SUPPORTED": 7,
+      "HUMAN_ADJUDICATED": 1,
+      "REFUTED": 1
+    },
+    "events": 234
+  }
+}

@@ -42,7 +42,7 @@ from cassation.orchestrator.schemas import (
     RunConfig,
 )
 
-QUESTION = ("Is an air fryer really cheaper to run than an electric oven?")
+QUESTION = ("Is it safe to charge an e-bike battery indoors overnight?")
 
 _failures: list[str] = []
 

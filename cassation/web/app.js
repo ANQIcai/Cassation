@@ -1432,7 +1432,7 @@ function connect() {
 
 // ------------------------------------------------------------------ wiring
 
-const DEMO_QUESTION = "Is an air fryer really cheaper to run than an electric oven?";
+const DEMO_QUESTION = "Is it safe to charge an e-bike battery indoors overnight?";
 
 $("approve-btn").addEventListener("click", submitApproval);
 
