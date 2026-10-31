@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+vendor/cookbook/
+runs/archive/
+.pytest_cache/
+docs/screens-old/
+.claude/
+docs/demo/*.mp4

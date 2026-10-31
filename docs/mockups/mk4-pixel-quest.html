@@ -1,0 +1,1151 @@
+<title>Pixel Quest Cassation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* ============ TOKENS (single committed arcade-dark theme) ============ */
+:root{
+  color-scheme: dark;
+  --bg:#0a0a14;
+  --panel:#11111f;
+  --raised:#191930;
+  --line:#2c2c4e;
+  --ink:#eaf2ff;
+  --muted:#8fa0c0;
+  --green:#3bf07a;
+  --green-dim:#1b7a42;
+  --red:#ff3b6b;
+  --red-dim:#8f1d3f;
+  --gold:#ffd23f;
+  --gold-dim:#a77f14;
+  --cyan:#35e6e6;
+  --cyan-dim:#157f82;
+  --purple:#8b5cf6;
+  --font-px:"Press Start 2P","Courier New",monospace;
+  --font-crt:"VT323","Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ color-scheme:dark; --bg:#0a0a14; --ink:#eaf2ff; }
+}
+:root[data-theme="dark"]{ color-scheme:dark; --bg:#0a0a14; --ink:#eaf2ff; }
+
+/* ============ BASE ============ */
+*{box-sizing:border-box; margin:0}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.10) 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(53,230,230,.10) 1px, transparent 1.5px);
+  background-size:120px 90px, 170px 140px;
+  background-position:10px 20px, 60px 70px;
+  color:var(--ink);
+  font-family:var(--font-crt);
+  font-size:17px;
+  line-height:1.3;
+  min-height:100vh;
+}
+.px{image-rendering:pixelated; display:block}
+button{font-family:inherit; cursor:pointer}
+button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+
+#app{display:flex; flex-direction:column; min-height:100vh; padding-inline:16px; padding-block:10px; gap:8px; max-width:1400px; margin:0 auto}
+
+/* pixel-cut corners helper */
+.pxbox{clip-path:polygon(0 6px,6px 6px,6px 0,calc(100% - 6px) 0,calc(100% - 6px) 6px,100% 6px,100% calc(100% - 6px),calc(100% - 6px) calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 6px),0 calc(100% - 6px))}
+
+/* ============ HUD ============ */
+#hud{display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  background:var(--panel); border:3px solid var(--line); padding:9px 14px}
+#brand{font-family:var(--font-px); font-size:11px; color:var(--gold);
+  text-shadow:2px 2px 0 var(--red-dim)}
+#stageLabel{font-family:var(--font-px); font-size:10px; color:var(--cyan); flex:1; text-align:center; min-width:150px; letter-spacing:1px}
+#meters{display:flex; gap:14px; font-size:18px; color:var(--muted)}
+#meters b{color:var(--gold); font-weight:normal; font-variant-numeric:tabular-nums}
+#meters .m{white-space:nowrap}
+.poppy{animation:ctrpop .3s steps(2)}
+@keyframes ctrpop{50%{transform:scale(1.4)}}
+
+#narrbar{background:var(--panel); border:3px solid var(--line); border-top:none; padding:5px 14px; font-size:21px; color:var(--ink); min-height:36px}
+#narr::before{content:"» "; color:var(--gold)}
+
+/* ============ APPROVAL BANNER ============ */
+#approve{display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:8px 14px;
+  border:3px solid var(--gold);
+  background:repeating-linear-gradient(45deg, #241c04 0 14px, #171204 14px 28px);
+  animation:gatepulse 1s steps(2) infinite}
+@keyframes gatepulse{50%{border-color:#7a6210}}
+#approve .at{font-size:20px; color:var(--gold); flex:1; min-width:200px}
+#approve button{font-family:var(--font-px); font-size:10px; padding:10px 14px; color:#140f02;
+  background:var(--gold); border:3px solid #fff2bf; box-shadow:3px 3px 0 #000}
+#approve button:active{transform:translate(2px,2px); box-shadow:1px 1px 0 #000}
+
+/* ============ LAYOUT ============ */
+#layout{display:flex; gap:10px; flex:1; min-height:0}
+#map{flex:1; position:relative; background:var(--panel); border:3px solid var(--line); min-height:500px; padding:10px}
+#case{position:absolute; left:14px; bottom:6px; font-size:15px; color:var(--muted); letter-spacing:.5px; z-index:1}
+#case b{color:var(--cyan); font-weight:normal}
+
+#towerWrap{position:absolute; left:14px; top:12px; width:112px; height:164px; z-index:2}
+#towerWrap canvas{position:absolute}
+#towerC{left:0; top:0}
+#wizC{left:96px; top:98px}
+#doorGlow{position:absolute; left:44px; top:118px; width:26px; height:22px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,210,63,.9), transparent 70%); opacity:0; pointer-events:none}
+#doorGlow.on{opacity:1; animation:glowpulse .5s steps(3) infinite}
+@keyframes glowpulse{50%{transform:scale(1.35)}}
+#bubble{position:absolute; left:118px; top:62px; background:var(--ink); color:#10101c; font-size:18px;
+  padding:2px 8px; border:3px solid #10101c; box-shadow:3px 3px 0 rgba(0,0,0,.6); opacity:0; white-space:nowrap; z-index:3}
+#bubble.on{opacity:1; animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+
+#paths{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0}
+#agents{position:absolute; inset:0; pointer-events:none; z-index:5}
+
+/* ============ ROOMS ============ */
+#rooms{position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,1fr); gap:58px 14px; margin:52px 0 26px 150px}
+.room{background:var(--raised); border:3px solid var(--line); min-height:92px; position:relative;
+  display:flex; flex-direction:column; transform-origin:center}
+.room.pop{animation:roompop .45s steps(4) backwards}
+@keyframes roompop{0%{transform:scale(0)}60%{transform:scale(1.15)}}
+.rbanner{display:flex; justify-content:space-between; align-items:center; gap:6px;
+  padding:3px 7px; background:#0d0d1c; border-bottom:3px solid var(--line)}
+.rid{font-family:var(--font-px); font-size:9px; color:var(--muted)}
+.rstate{font-family:var(--font-px); font-size:8px; color:var(--cyan); letter-spacing:1px}
+.rtext{padding:5px 8px 2px; font-size:17px; line-height:1.15; flex:1}
+.rfoot{display:flex; align-items:center; gap:8px; padding:3px 8px 6px}
+.rbar{flex:1; height:12px; border:2px solid var(--line); background:#0d0d1c; position:relative}
+.rbar i{display:block; height:100%; width:0%; background:var(--green); transition:width .6s steps(6)}
+.rbar::after{content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(90deg, transparent 0 8px, #0a0a14 8px 10px)}
+.rloot{display:flex; gap:3px; min-height:16px; align-items:center}
+.rloot .lt{animation:lootin .4s steps(3) backwards}
+@keyframes lootin{0%{transform:scale(2.6) rotate(20deg); filter:brightness(3)}}
+
+.room[data-state="fight"]  .rstate{color:#fff; animation:blinktxt .6s steps(1) infinite}
+.room[data-state="cleared"]{border-color:var(--green)}
+.room[data-state="cleared"] .rstate{color:var(--green)}
+.room[data-state="cursed"]{border-color:var(--red)}
+.room[data-state="cursed"] .rstate{color:var(--red)}
+.room[data-state="cursed"] .rbar i{background:var(--red)}
+.room[data-state="boss"]{border-color:var(--gold); animation:bossroom .3s steps(2) infinite}
+.room[data-state="boss"] .rstate{color:var(--gold)}
+@keyframes bossroom{50%{border-color:var(--red); transform:translate(2px,-1px)}}
+.room[data-state="ruled"]{border-color:var(--gold)}
+.room[data-state="ruled"] .rstate{color:var(--gold)}
+.room[data-state="ruled"] .rbar i{background:var(--gold)}
+.room[data-state="struck"]{border-color:#3a3a50; filter:grayscale(.9) brightness(.55)}
+.room[data-state="struck"] .rtext{text-decoration:line-through}
+.room.suspect{animation:wobble .5s steps(2) infinite}
+.room.suspect .rstate{color:var(--gold)}
+@keyframes wobble{50%{transform:rotate(1.2deg)}}
+@keyframes blinktxt{50%{opacity:.2}}
+
+.stamp{position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) rotate(-14deg);
+  font-family:var(--font-px); font-size:14px; color:var(--red); border:4px solid var(--red);
+  padding:6px 10px; background:rgba(10,10,20,.82); animation:stampin .35s steps(3) backwards; z-index:2; white-space:nowrap}
+.stamp.gold{color:var(--gold); border-color:var(--gold)}
+@keyframes stampin{0%{transform:translate(-50%,-50%) rotate(-14deg) scale(3.5); opacity:0}}
+
+/* ============ AGENTS ============ */
+.agent{position:absolute; left:0; top:0; width:40px; text-align:center; will-change:transform; z-index:5}
+.agent .frameB{display:none}
+.agent.f2 .frameA{display:none}
+.agent.f2 .frameB{display:block}
+.agent canvas{margin:0 auto}
+.agent .tag{display:inline-block; margin-top:1px; font-size:14px; line-height:1; padding:1px 4px; color:#0a0a14; background:var(--green)}
+.agent.rogue .tag{background:var(--red); color:#fff}
+.agent.owl .tag{background:var(--cyan)}
+.agent .body{animation:idlebob 1.1s steps(2) infinite}
+.agent.travel .body{animation:hop .32s steps(2) infinite}
+.agent.cheer .body{animation:cheer .45s steps(2) infinite}
+@keyframes idlebob{50%{transform:translateY(-2px)}}
+@keyframes hop{50%{transform:translateY(-9px)}}
+@keyframes cheer{50%{transform:translateY(-12px) rotate(6deg)}}
+.burst{position:absolute; width:46px; height:46px; border:4px solid var(--gold); border-radius:50%;
+  transform:translate(-50%,-50%); animation:burst .5s steps(4) forwards; pointer-events:none; z-index:4}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.2); opacity:1; border-color:#fff}
+  100%{transform:translate(-50%,-50%) scale(2.1); opacity:0}}
+
+/* ============ CONSOLE / LOG ============ */
+#consoleBox{width:332px; display:flex; flex-direction:column; background:#060609; border:3px solid var(--line)}
+#consoleHead{font-family:var(--font-px); font-size:9px; color:var(--green); padding:8px 10px;
+  border-bottom:3px solid var(--line); background:var(--panel); letter-spacing:1px}
+#consoleHead .cur{animation:blinktxt .8s steps(1) infinite}
+#log{flex:1; overflow-y:auto; padding:8px 10px; font-size:18px; line-height:1.25; min-height:120px}
+.ll{display:flex; gap:7px; margin-bottom:6px; align-items:baseline}
+.ll i{flex:0 0 8px; width:8px; height:8px; background:var(--muted); align-self:center}
+.ll span{flex:1}
+.l-sys{color:var(--muted)} .l-sys i{background:var(--muted)}
+.l-judge{color:var(--gold)} .l-judge i{background:var(--gold)}
+.l-adv{color:var(--green)} .l-adv i{background:var(--green)}
+.l-skp{color:var(--red)} .l-skp i{background:var(--red)}
+.l-clerk{color:var(--cyan)} .l-clerk i{background:var(--cyan)}
+.l-you{color:#ffe9a3} .l-you i{background:var(--gold); outline:2px solid var(--gold); outline-offset:2px}
+
+/* ============ CONTROLS ============ */
+#controls{display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  background:var(--panel); border:3px solid var(--line); padding:7px 12px}
+#controls button{background:var(--raised); color:var(--ink); border:3px solid var(--line);
+  font-family:var(--font-px); font-size:9px; padding:8px 10px}
+#controls button:hover{border-color:var(--cyan); color:var(--cyan)}
+#speeds{display:flex; gap:4px}
+#speeds button.on{background:var(--cyan); color:#06202a; border-color:#bdf7f7}
+#demoChip{margin-left:auto; font-size:15px; color:var(--muted); border:2px solid var(--line); padding:2px 8px}
+
+/* ============ OVERLAYS (generic) ============ */
+.ovl{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+  padding:16px; background:rgba(5,5,12,.92)}
+.ovl[hidden]{display:none}
+
+/* ---- START ---- */
+#start{flex-direction:column; gap:22px; text-align:center; background:
+  radial-gradient(circle, rgba(255,255,255,.14) 1px, transparent 1.6px) 0 0/90px 70px,
+  radial-gradient(circle, rgba(53,230,230,.16) 1px, transparent 1.6px) 40px 30px/130px 110px,
+  #0a0a14}
+#bigTitle{font-family:var(--font-px); font-size:clamp(20px,4.5vw,42px); color:var(--gold); line-height:1.5;
+  text-shadow:4px 4px 0 var(--red), 8px 8px 0 #2a0b22; animation:titlefloat 2.2s steps(3) infinite}
+#bigTitle small{display:block; font-size:clamp(10px,1.6vw,14px); color:var(--cyan); text-shadow:3px 3px 0 #06333a; margin-top:14px}
+@keyframes titlefloat{50%{transform:translateY(-5px)}}
+#cart{max-width:660px; background:var(--panel); border:4px solid var(--cyan); padding:16px 20px; text-align:left}
+#cart .cl{font-family:var(--font-px); font-size:9px; color:var(--cyan); margin-bottom:10px}
+#cart .q{font-size:24px; line-height:1.25}
+#cart .q b{color:var(--gold); font-weight:normal}
+#startHow{display:flex; gap:8px 18px; flex-wrap:wrap; justify-content:center; font-size:18px; color:var(--muted); max-width:720px}
+#startHow b{font-weight:normal}
+#btnStart{font-family:var(--font-px); font-size:clamp(11px,2vw,16px); padding:18px 26px; color:#06240f;
+  background:var(--green); border:4px solid #c8ffd9; box-shadow:0 0 0 4px #0a0a14, 0 0 28px rgba(59,240,122,.55), 6px 6px 0 4px #000;
+  animation:startpulse 1s steps(2) infinite}
+#btnStart:active{transform:translate(3px,3px)}
+@keyframes startpulse{50%{box-shadow:0 0 0 4px #0a0a14, 0 0 44px rgba(59,240,122,.9), 6px 6px 0 4px #000}}
+#pressStart{font-family:var(--font-px); font-size:10px; color:var(--ink); animation:blinktxt 1s steps(1) infinite}
+
+/* ---- BOSS ---- */
+#boss{flex-direction:column; gap:18px; overflow:hidden}
+#boss::before, #boss::after{content:""; position:absolute; top:-20%; bottom:-20%; width:75%; z-index:-1}
+#boss::before{left:-18%; background:linear-gradient(100deg, var(--green-dim), transparent 82%); transform:skewX(-9deg)}
+#boss::after{right:-18%; background:linear-gradient(-100deg, var(--red-dim), transparent 82%); transform:skewX(-9deg)}
+#bossTitle{font-family:var(--font-px); font-size:clamp(16px,3.4vw,30px); color:var(--red);
+  text-shadow:3px 3px 0 #3d0313; animation:bosstitle .4s steps(2) infinite}
+@keyframes bosstitle{50%{color:var(--gold); transform:translate(2px,0)}}
+#bossSub{font-size:22px; color:var(--ink); text-align:center}
+#bossArena{display:flex; gap:16px; align-items:stretch; justify-content:center; flex-wrap:wrap; max-width:980px}
+.vsCard{width:330px; max-width:92vw; background:var(--panel); border:4px solid var(--green); padding:14px; text-align:center;
+  display:flex; flex-direction:column; gap:8px; align-items:center}
+.vsCard.red{border-color:var(--red)}
+.vsCard .vn{font-family:var(--font-px); font-size:10px; color:var(--green)}
+.vsCard.red .vn{color:var(--red)}
+.vsCard .vq{font-size:21px; line-height:1.2}
+.vsCard .vq b{color:var(--gold); font-weight:normal; font-size:26px}
+.vsCard .vs-src{font-size:16px; color:var(--muted)}
+#vsBadge{font-family:var(--font-px); font-size:clamp(26px,5vw,52px); color:var(--gold);
+  text-shadow:4px 4px 0 var(--red-dim); align-self:center; animation:vspop .5s steps(4) backwards, vsshake .3s steps(2) infinite .5s}
+@keyframes vspop{0%{transform:scale(5); opacity:0}}
+@keyframes vsshake{50%{transform:translate(2px,-2px)}}
+.bolt{position:absolute; font-size:60px; color:var(--gold); animation:blinktxt .25s steps(1) infinite; pointer-events:none}
+
+/* ---- JURY ---- */
+#jury{flex-direction:column; gap:16px}
+#juryTitle{font-family:var(--font-px); font-size:clamp(14px,3vw,26px); color:var(--gold); text-align:center;
+  text-shadow:3px 3px 0 var(--red-dim); line-height:1.6}
+#jurySub{font-size:22px; color:var(--ink); text-align:center; max-width:640px}
+#juryCards{display:flex; gap:18px; justify-content:center; flex-wrap:wrap}
+.jCard{width:320px; max-width:92vw; background:var(--panel); border:4px solid var(--green); padding:16px;
+  display:flex; flex-direction:column; gap:8px; align-items:center; color:var(--ink); position:relative; text-align:center}
+.jCard:hover{background:var(--raised); transform:translateY(-4px); box-shadow:0 10px 0 #000}
+.jCard.red{border-color:var(--red)}
+.jCard .jn{font-family:var(--font-px); font-size:10px; color:var(--green)}
+.jCard.red .jn{color:var(--red)}
+.jCard .jq{font-size:21px; line-height:1.2}
+.jCard .jq b{color:var(--gold); font-weight:normal; font-size:27px}
+.jCard .js{font-size:16px; color:var(--muted)}
+.jCard.dim{opacity:.3; filter:grayscale(1)}
+.jCard.won{border-color:var(--gold); box-shadow:0 0 30px rgba(255,210,63,.5)}
+#juryHint{font-size:18px; color:var(--muted)}
+
+/* ---- VICTORY ---- */
+#victory{flex-direction:column; overflow-y:auto; justify-content:flex-start; padding-block:28px}
+#fw{position:fixed; inset:0; pointer-events:none}
+#vicInner{display:flex; flex-direction:column; align-items:center; gap:12px; position:relative; max-width:980px; width:100%}
+#vicGrid{display:flex; gap:18px; justify-content:center; align-items:flex-start; flex-wrap:wrap; width:100%}
+#vicSide{display:flex; flex-direction:column; gap:10px; align-items:center; width:340px; max-width:92vw}
+#vicTitle{font-family:var(--font-px); font-size:clamp(24px,5.4vw,52px); color:var(--gold); line-height:1.4;
+  text-shadow:4px 4px 0 var(--red), 8px 8px 0 #2a0b22; animation:victitle .6s steps(3) backwards}
+@keyframes victitle{0%{transform:scale(3); opacity:0}}
+#chestZone{position:relative; height:118px; width:160px}
+#chestZone canvas{position:absolute; left:50%; transform:translateX(-50%)}
+#chestC{bottom:0; z-index:1}
+#trophyC{bottom:54px; opacity:0; z-index:2}
+#trophyC.up{opacity:1; animation:trophyrise .8s steps(6) backwards; filter:drop-shadow(0 0 14px rgba(255,210,63,.9))}
+@keyframes trophyrise{0%{transform:translateX(-50%) translateY(40px) scale(.2)}}
+#verdictBox{background:var(--panel); border:4px solid var(--gold); padding:14px 18px; max-width:520px; flex:1 1 380px; text-align:left}
+#verdictBox h3{font-family:var(--font-px); font-size:10px; color:var(--gold); margin-bottom:10px; line-height:1.7}
+#verdictBox p{font-size:21px; margin-bottom:8px}
+#verdictBox p b{color:var(--green); font-weight:normal}
+#verdictBox p.vb2 b{color:var(--gold)}
+#verdictBox .cites{font-size:15px; color:var(--muted)}
+#tally{width:100%; font-size:20px}
+#tally .tr{display:flex; justify-content:space-between; border-bottom:2px dotted var(--line); padding:3px 2px; opacity:0}
+#tally .tr.in{opacity:1; animation:ctrpop .3s steps(2)}
+#tally .tr b{color:var(--cyan); font-weight:normal; font-variant-numeric:tabular-nums}
+#scoreRow{font-family:var(--font-px); font-size:clamp(13px,2.6vw,20px); color:var(--ink)}
+#scoreRow b{color:var(--gold); font-weight:normal; font-variant-numeric:tabular-nums}
+#hiScore{font-family:var(--font-px); font-size:clamp(11px,2vw,16px); color:var(--red);
+  animation:blinktxt .5s steps(1) infinite; text-shadow:2px 2px 0 #3d0313}
+#btnAgain{font-family:var(--font-px); font-size:12px; padding:14px 20px; color:#06240f;
+  background:var(--green); border:4px solid #c8ffd9; box-shadow:4px 4px 0 #000}
+#btnAgain:active{transform:translate(2px,2px)}
+
+/* ---- FLASH + SPLASH ---- */
+#flash{position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:80}
+#flash.go{animation:flashA .55s steps(5) forwards}
+@keyframes flashA{0%{opacity:.95}100%{opacity:0}}
+#splash{position:fixed; left:50%; top:42%; transform:translate(-50%,-50%); z-index:81; pointer-events:none;
+  font-family:var(--font-px); font-size:clamp(16px,4vw,36px); color:var(--gold); white-space:nowrap;
+  text-shadow:4px 4px 0 var(--red-dim); opacity:0; text-align:center; line-height:1.5}
+#splash.go{animation:splashA 1.4s steps(8) forwards}
+@keyframes splashA{0%{opacity:0; transform:translate(-50%,-50%) scale(3)}
+  12%{opacity:1; transform:translate(-50%,-50%) scale(1)}
+  80%{opacity:1}100%{opacity:0}}
+
+#map.shake{animation:mapshake .4s steps(4)}
+@keyframes mapshake{25%{transform:translate(4px,-3px)}50%{transform:translate(-4px,2px)}75%{transform:translate(3px,3px)}}
+
+/* fast-forward: kill motion */
+.ff *, .ff *::before, .ff *::after{animation:none !important; transition:none !important}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:900px){
+  #layout{flex-direction:column}
+  #consoleBox{width:100%; height:210px; flex:none}
+  #rooms{grid-template-columns:repeat(2,1fr); gap:56px 10px; margin:196px 0 26px 0}
+  #map{min-height:620px}
+  #stageLabel{order:3; flex-basis:100%}
+}
+@media (max-width:460px){
+  #rooms{grid-template-columns:repeat(2,1fr)}
+  .rtext{font-size:15px}
+  #meters{font-size:15px; gap:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}
+</style>
+
+<div id="app">
+  <header id="hud">
+    <div id="brand">PIXEL QUEST CASSATION</div>
+    <div id="stageLabel">INSERT QUESTION</div>
+    <div id="meters">
+      <span class="m"><b id="cSrc">0</b> SCROLLS</span>
+      <span class="m"><b id="cAg">0</b> HEROES</span>
+      <span class="m"><b id="cTime">0:00</b></span>
+    </div>
+  </header>
+  <div id="narrbar"><span id="narr">Press START THE TRIAL to begin.</span></div>
+
+  <div id="approve" class="pxbox" hidden>
+    <span class="at">YOUR CALL, JURY: approve the quest map. Room C6 looks fishy — "beats diamond at EVERYTHING" is hype, not a testable claim…</span>
+    <button id="btnStrike">STRIKE C6 &amp; SET OUT</button>
+  </div>
+
+  <div id="layout">
+    <section id="map">
+      <div id="case">CASE FILE: <b>cubic boron arsenide</b> — record heat conductor, or hype?</div>
+      <div id="towerWrap">
+        <canvas id="towerC"></canvas>
+        <canvas id="wizC"></canvas>
+        <div id="doorGlow"></div>
+        <div id="bubble">…?</div>
+      </div>
+      <svg id="paths"></svg>
+      <div id="rooms"></div>
+      <div id="agents"></div>
+    </section>
+    <aside id="consoleBox">
+      <div id="consoleHead">ADVENTURE LOG <span class="cur">&#9646;</span></div>
+      <div id="log"></div>
+    </aside>
+  </div>
+
+  <footer id="controls">
+    <button id="btnReplay">&#8635; REPLAY</button>
+    <div id="speeds">
+      <button data-s="1" class="on">1&times;</button>
+      <button data-s="2">2&times;</button>
+      <button data-s="4">4&times;</button>
+    </div>
+    <button id="btnSkip">SKIP TO FINALE &#187;</button>
+    <span id="demoChip">SIMULATED DEMO &middot; real sources</span>
+  </footer>
+</div>
+
+<!-- ================= OVERLAYS ================= -->
+<div id="start" class="ovl">
+  <div id="bigTitle">PIXEL QUEST<br>CASSATION<small>THE RESEARCH COURT, PLAYED AS AN ARCADE QUEST</small></div>
+  <div id="cart" class="pxbox">
+    <div class="cl">TONIGHT'S QUESTION &middot; LOADED</div>
+    <div class="q">Can the crystal <b>cubic boron arsenide</b> really move heat at record speed &mdash; and <b>which number can we trust</b> before spending a GPU-weekend on it?</div>
+  </div>
+  <div id="startHow">
+    <span><b style="color:var(--gold)">1</b> the Judge Wizard splits it into 9 quests</span>
+    <span><b style="color:var(--gold)">2</b> YOU approve the map</span>
+    <span><b style="color:var(--green)">3</b> green knights hunt proof</span>
+    <span><b style="color:var(--red)">4</b> red rogues hunt doubt</span>
+    <span><b style="color:var(--gold)">5</b> YOU judge the boss battle</span>
+  </div>
+  <button id="btnStart">&#9654; START THE TRIAL</button>
+  <div id="pressStart">PRESS START</div>
+</div>
+
+<div id="boss" class="ovl" hidden>
+  <div id="bossTitle">!! BOSS BATTLE !!</div>
+  <div id="bossSub">ROOM C2 &middot; two real papers refuse to agree</div>
+  <div id="bossArena">
+    <div class="vsCard pxbox">
+      <div class="vn">BO THE KNIGHT DEFENDS</div>
+      <div class="vsSprite" id="bossL"></div>
+      <div class="vq">&ldquo;<b>~1300 W/mK</b> &mdash; the highest among metals and semiconductors.&rdquo;</div>
+      <div class="vs-src">Kang et al., Science 2018</div>
+    </div>
+    <div id="vsBadge">VS</div>
+    <div class="vsCard red pxbox">
+      <div class="vn">REX THE ROGUE ATTACKS</div>
+      <div class="vsSprite" id="bossR"></div>
+      <div class="vq">&ldquo;<b>&gt;2100 W/mK</b> in purified-arsenic crystals &mdash; the record was impurities, not physics.&rdquo;</div>
+      <div class="vs-src">Niyikiza et al., Materials Today 2025</div>
+    </div>
+  </div>
+  <div class="bolt" style="left:12%; top:16%">&#9889;</div>
+  <div class="bolt" style="right:12%; bottom:18%">&#9889;</div>
+</div>
+
+<div id="jury" class="ovl" hidden>
+  <div id="juryTitle">CHOOSE YOUR CHAMPION</div>
+  <div id="jurySub">The heroes cannot settle Room C2. <b style="color:var(--gold)">YOU are the Jury</b> &mdash; which number rules?</div>
+  <div id="juryCards">
+    <button class="jCard pxbox" id="juryA">
+      <span class="jn">TEAM 2018 &middot; THE RECORD</span>
+      <span class="jSprite" id="jurySpA"></span>
+      <span class="jq"><b>~1300 W/mK</b><br>measured 3 separate times, published in Science</span>
+      <span class="js">Kang &middot; Li &middot; Tian, Science 2018</span>
+    </button>
+    <button class="jCard red pxbox" id="juryB">
+      <span class="jn">TEAM 2025 &middot; THE CHALLENGER</span>
+      <span class="jSprite" id="jurySpB"></span>
+      <span class="jq"><b>&gt;2100 W/mK</b><br>purer crystals, newest result, 2nd technique agrees</span>
+      <span class="js">Niyikiza, Materials Today 2025</span>
+    </button>
+  </div>
+  <div id="juryHint">tap a champion &mdash; your ruling is stamped on the record forever</div>
+</div>
+
+<div id="victory" class="ovl" hidden>
+  <canvas id="fw"></canvas>
+  <div id="vicInner">
+    <div id="vicTitle">&#9733; VICTORY! &#9733;</div>
+    <div id="chestZone">
+      <canvas id="trophyC"></canvas>
+      <canvas id="chestC"></canvas>
+    </div>
+    <div id="vicGrid">
+      <div id="verdictBox" class="pxbox">
+        <h3>THE VERDICT &middot; SIGNED BY THE JUDGE WIZARD</h3>
+        <p class="vb1">Crystals you can actually grow today carry <b>1000&ndash;1500 W/mK</b> &mdash; proven by many labs.</p>
+        <p class="vb2" id="vRuling">And YOU ruled the true ceiling is the 2025 challenger: <b>OVER 2100 W/mK</b> &mdash; the old &ldquo;1400 speed limit&rdquo; is broken, and theory is racing to catch up.</p>
+        <p class="cites">9 claims tried &middot; 1 struck by you &middot; every number from a real paper: Lindsay 2013 &middot; Feng 2017 &middot; Kang 2018 &middot; Niyikiza 2025</p>
+      </div>
+      <div id="vicSide">
+        <div id="tally">
+          <div class="tr"><span>SCROLLS OF EVIDENCE</span><b>14</b></div>
+          <div class="tr"><span>HEROES DEPLOYED</span><b>10</b></div>
+          <div class="tr"><span>ROOMS CLEARED</span><b>5</b></div>
+          <div class="tr"><span>CLAIMS CURSED (busted!)</span><b>2</b></div>
+          <div class="tr"><span>RULED BY YOU, THE JURY</span><b>2</b></div>
+          <div class="tr"><span>QUEST TIME</span><b id="tTime">0:54</b></div>
+        </div>
+        <div id="scoreRow">SCORE <b id="scoreN">000000</b></div>
+        <div id="hiScore">&#9733; NEW HIGH SCORE &#9733;</div>
+        <button id="btnAgain">&#9654; PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="flash"></div>
+<div id="splash"></div>
+
+<script>
+'use strict';
+/* ====================================================================
+   PIXEL QUEST CASSATION — self-running scripted simulation (no backend)
+   ==================================================================== */
+const $=s=>document.querySelector(s);
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- pixel sprite engine ---------- */
+const PAL={
+ K:'#10101c', W:'#ffffff', L:'#c8d6e5', l:'#8a9bb0',
+ G:'#3bf07a', g:'#1b8a48', R:'#ff3b6b', r:'#a3204a',
+ Y:'#ffd23f', y:'#b8860b', C:'#35e6e6', c:'#17888a',
+ P:'#8b5cf6', p:'#5b3aa8', S:'#ffd9a8', B:'#8a5a2b', b:'#5a3a18',
+ M:'#d23fa4', m:'#8a2168', T:'#55557e', t:'#3a3a5c', N:'#07070d', E:'#10101c'
+};
+function sprite(rows, scale, over){
+  const pal=over?Object.assign({},PAL,over):PAL;
+  const h=rows.length, w=rows[0].length;
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const g2=c.getContext('2d');
+  rows.forEach((row,y)=>{for(let x=0;x<row.length;x++){const ch=row[x];
+    if(ch==='.')continue; g2.fillStyle=pal[ch]||'#f0f'; g2.fillRect(x,y,1,1);}});
+  c.style.width=(w*scale)+'px'; c.style.height=(h*scale)+'px'; c.classList.add('px');
+  return c;
+}
+const KNIGHT_A=[
+'.....YY.....',
+'....KKKK....',
+'...KGGGGK...',
+'..KGGGGGGK..',
+'..KLLLLLLK..',
+'..KLELLELK..',
+'..KGGGGGGK..',
+'.KGKYYYYKGK.',
+'.KGKGGGGKGK.',
+'..KKGGGGKK..',
+'...KGGGGK...',
+'..KgK..KgK..',
+'..KgK..KgK..',
+'..KK....KK..'];
+const KNIGHT_B=[
+'....YY......',
+'....KKKK....',
+'...KGGGGK...',
+'..KGGGGGGK..',
+'..KLLLLLLK..',
+'..KLLLLLLK..',
+'..KGGGGGGK..',
+'.KGKYYYYKGK.',
+'.KGKGGGGKGK.',
+'..KKGGGGKK..',
+'...KGGGGK...',
+'..KgK..KgK..',
+'..KgK..KgK..',
+'..KK....KK..'];
+const ROGUE_A=[
+'.....K......',
+'....KRK.....',
+'....KRRK....',
+'...KRRRRK...',
+'..KRRRRRRK..',
+'..KrrrrrrK..',
+'..KrYKKYrK..',
+'..KRRRRRRK..',
+'.KRKrrrrKRK.',
+'.KRKrLLrKRK.',
+'..KKRRRRKK..',
+'...KrKKrK...',
+'..KrK..KrK..',
+'..KK....KK..'];
+const ROGUE_B=[
+'......K.....',
+'.....KRK....',
+'....KRRK....',
+'...KRRRRK...',
+'..KRRRRRRK..',
+'..KrrrrrrK..',
+'..KrrKKrrK..',
+'..KRRRRRRK..',
+'.KRKrrrrKRK.',
+'.KRKrLLrKRK.',
+'..KKRRRRKK..',
+'...KrKKrK...',
+'..KrK..KrK..',
+'..KK....KK..'];
+const OWL_A=[
+'.K........K.',
+'.KCK....KCK.',
+'.KCCKKKKCCK.',
+'KCCCCCCCCCCK',
+'KCWWKCCKWWCK',
+'KCWEKCCKEWCK',
+'KCCCKYYKCCCK',
+'KCccWWWWccCK',
+'.KccWWWWccK.',
+'.KCccccccCK.',
+'..KCCCCCCK..',
+'...KY..YK...'];
+const OWL_B=[
+'.K........K.',
+'.KCK....KCK.',
+'.KCCKKKKCCK.',
+'WCCCCCCCCCCW',
+'KCWWKCCKWWCK',
+'KCEWKCCKWECK',
+'KCCCKYYKCCCK',
+'KCccWWWWccCK',
+'.KccWWWWccK.',
+'.KCccccccCK.',
+'..KCCCCCCK..',
+'...KY..YK...'];
+const WIZ_A=[
+'......KK......',
+'.....KPPK.....',
+'.....KPPPK....',
+'....KPPPPPK...',
+'....KPYPPPK...',
+'...KPPPPPPPK..',
+'..KPPPPPYPPK..',
+'.KKKKKKKKKKKK.',
+'...KSSSSSSK...',
+'...KSESSESK...',
+'..KWWWWWWWWK..',
+'..KWWWWWWWWK..',
+'.KPPKWWWWKPPK.',
+'.KPPPKWWKPPPK.',
+'.KPPPPKKPPPPK.',
+'.KPYPPPPPPYPK.',
+'.KPPPPPPPPPPK.',
+'..KKKKKKKKKK..'];
+const WIZ_B=[
+'......KK......',
+'.....KPPK.....',
+'.....KPPPK....',
+'....KPPPPPK...',
+'....KPWPPPK...',
+'...KPPPPPPPK..',
+'..KPPPPPYPPK..',
+'.KKKKKKKKKKKK.',
+'...KSSSSSSK...',
+'...KSSSSSSK...',
+'..KWWWWWWWWK..',
+'..KWWWWWWWWK..',
+'.KPPKWWWWKPPK.',
+'.KPPPKWWKPPPK.',
+'.KPPPPKKPPPPK.',
+'.KPYPPPPPPYPK.',
+'.KPPPPPPPPPPK.',
+'..KKKKKKKKKK..'];
+const COIN=[
+'.KKKK.',
+'KYYYYK',
+'KYWYyK',
+'KYYYyK',
+'KYyyyK',
+'.KKKK.'];
+const SCROLL=[
+'.KKKKKKKK.',
+'KWWWWWWWWK',
+'KWWWYYWWWK',
+'KWWWYYWWWK',
+'KWWWWWWWWK',
+'.KKKKKKKK.'];
+const CHEST_CLOSED=[
+'..KKKKKKKKKK..',
+'.KBBBBBBBBBBK.',
+'KBbBBBBBBBBbBK',
+'KYYYYYYYYYYYYK',
+'KBBBBBKYYKBBBK',
+'KBBBBBKYYKBBBK',
+'KBbBBBBBBBBbBK',
+'KBBBBBBBBBBBBK',
+'KYYKBBBBBBKYYK',
+'.KKKKKKKKKKKK.'];
+const CHEST_OPEN=[
+'.KKKKKKKKKKKK.',
+'KBBBBBBBBBBBBK',
+'KBbbbbbbbbbbBK',
+'KKKKKKKKKKKKKK',
+'.KWYYWYYWYYWK.',
+'KYYYYYYYYYYYYK',
+'KBBBBBBBBBBBBK',
+'KBbBBBBBBBBbBK',
+'KBBBBBKYYKBBBK',
+'KBBBBBKYYKBBBK',
+'KBbBBBBBBBBbBK',
+'KYYKBBBBBBKYYK',
+'.KKKKKKKKKKKK.'];
+const TROPHY=[
+'.KKKKKKKKKK.',
+'KYKYYYYYYKYK',
+'KYKYYWWYYKYK',
+'.KKYYWWYYKK.',
+'..KYYYYYYK..',
+'..KYYYYYYK..',
+'...KYYYYK...',
+'....KYYK....',
+'....KYYK....',
+'...KYYYYK...',
+'..KYYYYYYK..',
+'..KKKKKKKK..'];
+function towerGrid(){
+  const W=28,H=38;
+  const g=Array.from({length:H},()=>Array(W).fill('.'));
+  const set=(x,y,c)=>{if(x>=0&&x<W&&y>=0&&y<H)g[y][x]=c;};
+  for(let y=0;y<6;y++) set(13,y,'K');                       // flag pole
+  [[14,0],[15,0],[14,1],[15,1],[16,1],[17,1],[14,2],[15,2]].forEach(([x,y])=>set(x,y,'Y'));
+  for(let y=4;y<=11;y++){const half=y-3;                    // roof pyramid
+    for(let x=13-half;x<=13+half;x++) set(x,y,(x===13-half||x===13+half)?'K':'M');}
+  for(let x=3;x<=24;x++) set(x,12,'Y');                     // gold ledge
+  set(2,12,'K'); set(25,12,'K');
+  for(let y=13;y<=34;y++)for(let x=4;x<=23;x++){            // brick wall
+    let c='T';
+    if(y%4===1)c='t'; else if(((x+(Math.floor(y/4)%2?2:0))%5)===0)c='t';
+    set(x,y,c);}
+  for(let y=13;y<=34;y++){set(3,y,'K');set(24,y,'K');}      // outline
+  for(let y=15;y<=22;y++)for(let x=10;x<=17;x++)set(x,y,'N'); // window
+  for(let x=10;x<=17;x++){set(x,14,'Y');set(x,23,'Y');}     // window frame
+  for(let y=15;y<=22;y++){set(9,y,'Y');set(18,y,'Y');}
+  set(13,17,'Y');set(14,17,'Y');set(13,18,'W');set(14,18,'Y'); // candle glint in window
+  set(13,20,'y');set(14,20,'y');
+  for(let y=29;y<=34;y++)for(let x=11;x<=16;x++)            // door
+    set(x,y,(y===29||x===11||x===16)?'y':'b');
+  for(let y=35;y<38;y++)for(let x=2;x<=25;x++) set(x,y,y===35?'K':'t'); // base
+  return g.map(r=>r.join(''));
+}
+
+/* ---------- data ---------- */
+const CLAIMS=[
+ {id:'C1', text:'2013 prophecy: theory says BAs could carry ~2200 W/mK — near diamond!', nick:'the 2013 prophecy'},
+ {id:'C2', text:'2018 record: real crystals measured at ~1300 W/mK (Science).', nick:'the 2018 record'},
+ {id:'C3', text:'The first crystals were weak — only ~190 W/mK.', nick:'the weak first crystals'},
+ {id:'C4', text:'2017 rule: four-phonon physics caps BAs at ~1400 W/mK.', nick:'the 1400 speed limit'},
+ {id:'C5', text:'2025: purified-arsenic crystals break 2100 W/mK!', nick:'the 2025 challenger'},
+ {id:'C6', text:'BAs beats diamond at everything.', nick:'the diamond boast'},
+ {id:'C7', text:'Isotope-pure boron adds +40% more heat flow?', nick:'the isotope promise'},
+ {id:'C8', text:'A second measuring trick also sees >2000 W/mK.', nick:'the second witness'},
+ {id:'C9', text:'One crystal, many numbers: 1500→2400 across one gem.', nick:'the patchy gem'},
+];
+const STATE_WORD={quest:'QUEST?', fight:'FIGHT!', cleared:'CLEARED', cursed:'CURSED',
+  boss:'BOSS!!', ruled:'&#9819; RULED', struck:'STRUCK', fishy:'FISHY?'};
+const AGENTS=[
+ {id:'ada', name:'ADA', kind:'knight', room:'C1', plume:'#ffd23f'},
+ {id:'bo',  name:'BO',  kind:'knight', room:'C2', plume:'#35e6e6'},
+ {id:'cy',  name:'CY',  kind:'knight', room:'C3', plume:'#ff8ab0'},
+ {id:'dot', name:'DOT', kind:'knight', room:'C5', plume:'#ffffff'},
+ {id:'eli', name:'ELI', kind:'knight', room:'C8', plume:'#b78bff'},
+ {id:'rex', name:'REX', kind:'rogue',  room:'C2', plume:'#ffd23f'},
+ {id:'vex', name:'VEX', kind:'rogue',  room:'C4', plume:'#35e6e6'},
+ {id:'nyx', name:'NYX', kind:'rogue',  room:'C7', plume:'#ffffff'},
+ {id:'zed', name:'ZED', kind:'rogue',  room:'C9', plume:'#b78bff'},
+ {id:'pip', name:'PIP', kind:'owl',   room:null, plume:'#ffd23f'},
+];
+
+/* ---------- static art ---------- */
+const towerC=sprite(towerGrid(),4);
+towerC.id='towerC'; $('#towerC').replaceWith(towerC);
+const wizA=sprite(WIZ_A,3), wizB=sprite(WIZ_B,3);
+wizA.id='wizC'; $('#wizC').replaceWith(wizA);
+wizB.style.position='absolute'; wizB.style.left='96px'; wizB.style.top='98px'; wizB.hidden=true;
+$('#towerWrap').append(wizB);
+setInterval(()=>{ if(REDUCED) return; wizA.hidden=!wizA.hidden; wizB.hidden=!wizB.hidden; },700);
+$('#bossL').append(sprite(KNIGHT_A,5,{Y:'#35e6e6'}));
+$('#bossR').append(sprite(ROGUE_A,5));
+$('#jurySpA').append(sprite(KNIGHT_A,4,{Y:'#35e6e6'}));
+$('#jurySpB').append(sprite(ROGUE_A,4));
+const chestClosed=sprite(CHEST_CLOSED,6), chestOpen=sprite(CHEST_OPEN,6), trophy=sprite(TROPHY,5);
+chestClosed.id='chestC'; $('#chestC').replaceWith(chestClosed);
+trophy.id='trophyC'; $('#trophyC').replaceWith(trophy);
+
+/* ---------- log console (type-on) ---------- */
+const logBox=$('#log'); const tq=[]; let typing=false;
+function log(cls,txt){ tq.push({cls,txt}); pumpLog(); }
+function pumpLog(){
+  if(typing) return; const item=tq.shift(); if(!item) return;
+  typing=true;
+  const row=document.createElement('div'); row.className='ll l-'+item.cls;
+  row.innerHTML='<i></i><span></span>';
+  logBox.append(row); const span=row.lastChild;
+  const instant=ffMode||REDUCED;
+  let i=0;
+  const step=()=>{
+    if(instant||tq.length>2||i>=item.txt.length){ span.textContent=item.txt; scrollLog(); typing=false; pumpLog(); return; }
+    span.textContent=item.txt.slice(0,++i); scrollLog();
+    setTimeout(step, Math.max(4,14/speed));
+  };
+  step();
+}
+function scrollLog(){ logBox.scrollTop=logBox.scrollHeight; }
+function flushLog(){ while(tq.length){const it=tq.shift();
+  const row=document.createElement('div'); row.className='ll l-'+it.cls;
+  row.innerHTML='<i></i><span></span>'; row.lastChild.textContent=it.txt; logBox.append(row);} typing=false; scrollLog(); }
+
+/* ---------- counters ---------- */
+let srcN=0;
+function addSrc(n){ srcN+=n; const el=$('#cSrc'); el.textContent=srcN;
+  el.classList.remove('poppy'); void el.offsetWidth; el.classList.add('poppy'); }
+function setAgents(n){ $('#cAg').textContent=n; }
+function fmtT(ms){ const s=Math.floor(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+/* ---------- stage / narration / splash / flash ---------- */
+function stage(t){ $('#stageLabel').textContent=t; }
+function narr(t){ $('#narr').textContent=t; }
+function splash(t,color){ const s=$('#splash'); s.textContent=t; s.style.color=color||'var(--gold)';
+  s.classList.remove('go'); void s.offsetWidth; if(!ffMode) s.classList.add('go'); }
+function flash(){ const f=$('#flash'); f.classList.remove('go'); void f.offsetWidth; if(!ffMode&&!REDUCED) f.classList.add('go'); }
+function shakeMap(){ if(ffMode||REDUCED) return; const m=$('#map'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); }
+
+/* ---------- rooms ---------- */
+const roomsBox=$('#rooms');
+function popRoom(claim){
+  const el=document.createElement('div'); el.className='room pxbox'; el.id='room-'+claim.id;
+  el.dataset.state='quest';
+  el.innerHTML='<div class="rbanner"><span class="rid">ROOM '+claim.id+'</span>'+
+    '<span class="rstate">QUEST?</span></div>'+
+    '<div class="rtext">'+claim.text+'</div>'+
+    '<div class="rfoot"><div class="rbar"><i></i></div><div class="rloot"></div></div>';
+  roomsBox.append(el);
+  if(!ffMode){ el.classList.add('pop'); }
+  drawPaths(); placeParkedAgents();
+}
+function roomState(id, st){
+  const el=$('#room-'+id); if(!el) return;
+  el.dataset.state=st; el.classList.remove('suspect');
+  el.querySelector('.rstate').innerHTML=STATE_WORD[st]||st;
+}
+function setBar(id,pct){ const el=$('#room-'+id); if(!el) return;
+  el.querySelector('.rbar i').style.width=pct+'%'; }
+function loot(id,kind){ const el=$('#room-'+id); if(!el) return;
+  const w=document.createElement('span'); w.className='lt';
+  w.append(sprite(kind==='coin'?COIN:SCROLL,2));
+  el.querySelector('.rloot').append(w); }
+function stampRoom(id, txt, gold){
+  const el=$('#room-'+id); if(!el) return;
+  const s=document.createElement('div'); s.className='stamp'+(gold?' gold':''); s.textContent=txt;
+  el.append(s);
+}
+
+/* ---------- paths (tower -> rooms) ---------- */
+function mapRect(){ return $('#map').getBoundingClientRect(); }
+function towerDoor(){
+  const t=towerC.getBoundingClientRect(), m=mapRect();
+  return {x:t.left-m.left+t.width/2, y:t.top-m.top+t.height-10};
+}
+function roomPoint(id, kind){
+  const el=$('#room-'+id); if(!el) return towerDoor();
+  const r=el.getBoundingClientRect(), m=mapRect();
+  const cx=r.left-m.left, cy=r.top-m.top;
+  if(kind==='knight') return {x:cx+8, y:cy-58};
+  if(kind==='rogue')  return {x:cx+r.width-48, y:cy-58};
+  return {x:cx+r.width/2-20, y:cy-58};
+}
+function drawPaths(){
+  const svg=$('#paths'); const m=mapRect();
+  svg.setAttribute('viewBox','0 0 '+m.width+' '+m.height);
+  svg.innerHTML='';
+  const d=towerDoor();
+  document.querySelectorAll('.room').forEach(el=>{
+    const r=el.getBoundingClientRect();
+    const x=r.left-m.left+r.width/2, y=r.top-m.top+4;
+    const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1',d.x); ln.setAttribute('y1',d.y-6);
+    ln.setAttribute('x2',x);   ln.setAttribute('y2',y);
+    ln.setAttribute('stroke','rgba(53,230,230,.20)');
+    ln.setAttribute('stroke-width','3'); ln.setAttribute('stroke-dasharray','4 8');
+    svg.append(ln);
+  });
+}
+
+/* ---------- agents ---------- */
+const agentsBox=$('#agents'); const liveAgents={};
+function mkAgent(a){
+  const el=document.createElement('div'); el.className='agent '+a.kind;
+  const body=document.createElement('div'); body.className='body';
+  const grids=a.kind==='knight'?[KNIGHT_A,KNIGHT_B]:a.kind==='rogue'?[ROGUE_A,ROGUE_B]:[OWL_A,OWL_B];
+  const over=a.kind==='knight'?{Y:a.plume}:a.kind==='rogue'?{L:a.plume}:null;
+  const fa=sprite(grids[0],3,over), fb=sprite(grids[1],3,over);
+  fa.className+=' frameA'; fb.className+=' frameB';
+  body.append(fa,fb);
+  const tag=document.createElement('span'); tag.className='tag'; tag.textContent=a.name;
+  el.append(body,tag);
+  agentsBox.append(el);
+  return el;
+}
+function placeAgent(el,p){ el.style.transform='translate('+(p.x)+'px,'+(p.y)+'px)'; }
+function spawnBurst(p){
+  if(ffMode||REDUCED) return;
+  const b=document.createElement('div'); b.className='burst';
+  b.style.left=p.x+20+'px'; b.style.top=p.y+20+'px';
+  agentsBox.append(b); setTimeout(()=>b.remove(),600);
+}
+function spawnAgent(a){
+  const el=mkAgent(a); liveAgents[a.id]={a,el,anchor:a.room?()=>roomPoint(a.room,a.kind):()=>pipPerch()};
+  const d=towerDoor(); const start={x:d.x-20,y:d.y-44};
+  placeAgent(el,start); spawnBurst(start);
+  const dest=liveAgents[a.id].anchor();
+  if(ffMode||REDUCED){ placeAgent(el,dest); return; }
+  el.style.transitionProperty='transform';
+  el.style.transitionTimingFunction='cubic-bezier(.35,.75,.45,1)';
+  el.style.transitionDuration=(1150/speed)+'ms';
+  el.classList.add('travel');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>placeAgent(el,dest)));
+  setTimeout(()=>{el.classList.remove('travel');},1200/speed);
+}
+function pipPerch(){
+  const d=towerDoor(); return {x:d.x+18,y:d.y-140};
+}
+function moveAgent(id,dest,ms){
+  const la=liveAgents[id]; if(!la) return;
+  la.anchor=()=>dest;
+  if(ffMode||REDUCED){ placeAgent(la.el,dest); return; }
+  la.el.style.transitionDuration=((ms||800)/speed)+'ms';
+  la.el.classList.add('travel');
+  requestAnimationFrame(()=>placeAgent(la.el,dest));
+  setTimeout(()=>la.el.classList.remove('travel'),(ms||800)/speed+60);
+}
+function placeParkedAgents(){
+  Object.values(liveAgents).forEach(la=>{
+    if(la.el.classList.contains('travel')) return;
+    const d=la.el.style.transitionDuration; la.el.style.transitionDuration='0ms';
+    placeAgent(la.el,la.anchor());
+    requestAnimationFrame(()=>{la.el.style.transitionDuration=d;});
+  });
+}
+setInterval(()=>{ if(REDUCED) return;
+  Object.values(liveAgents).forEach(la=>la.el.classList.toggle('f2')); },380);
+addEventListener('resize',()=>{ drawPaths(); placeParkedAgents(); });
+
+/* ---------- overlays logic ---------- */
+let juryDone=false, ruledFor=null;
+function openBoss(){ $('#boss').hidden=false; }
+function closeBoss(){ $('#boss').hidden=true; }
+function openJury(){ $('#jury').hidden=false; }
+function closeJury(){ $('#jury').hidden=true; }
+function rule(side){           // side: '2018' | '2025'
+  if(juryDone) return; juryDone=true; ruledFor=side;
+  const winEl=side==='2025'?$('#juryB'):$('#juryA');
+  const loseEl=side==='2025'?$('#juryA'):$('#juryB');
+  winEl.classList.add('won'); loseEl.classList.add('dim');
+  const s=document.createElement('div'); s.className='stamp gold'; s.textContent='YOUR RULING';
+  winEl.append(s);
+  log('you', side==='2025'
+    ? 'YOU ruled for 2025: OVER 2100 W/mK. Stamped HUMAN RULED — forever.'
+    : 'YOU ruled for 2018: ~1300 W/mK, until the new result is replicated. Stamped HUMAN RULED.');
+  $('#vRuling').innerHTML = side==='2025'
+    ? 'And YOU ruled the true ceiling is the 2025 challenger: <b>OVER 2100 W/mK</b> &mdash; the old &ldquo;1400 speed limit&rdquo; is broken, and theory is racing to catch up.'
+    : 'And YOU ruled for the careful 2018 record: <b>~1300 W/mK</b> &mdash; the 2025 challenger (&gt;2100) waits until another lab grows crystals that good.';
+  // jump sim time forward so the show continues immediately after a human click
+  if(simT<T.ruleAuto) simT=T.ruleAuto;
+}
+$('#juryA').addEventListener('click',()=>rule('2018'));
+$('#juryB').addEventListener('click',()=>rule('2025'));
+
+let approved=false;
+function doStrike(){
+  if(approved) return; approved=true;
+  $('#approve').hidden=true;
+  roomState('C6','struck'); stampRoom('C6','STRUCK ⊘');
+  shakeMap();
+  log('you','YOU struck Room C6: "beats diamond at everything" — hype, not a testable claim. It will never run.');
+  narr('Room C6 is struck from the map. It never runs.');
+  if(simT<T.strike) simT=T.strike;
+}
+$('#btnStrike').addEventListener('click',doStrike);
+
+/* ---------- victory ---------- */
+let fwRaf=null;
+function fireworks(){
+  const cv=$('#fw'); const ctx=cv.getContext('2d');
+  const fit=()=>{cv.width=innerWidth; cv.height=innerHeight;}; fit();
+  addEventListener('resize',fit);
+  const parts=[]; const colors=['#3bf07a','#ff3b6b','#ffd23f','#35e6e6','#8b5cf6','#ffffff'];
+  function boom(x,y){ const col=colors[Math.floor(Math.random()*colors.length)];
+    for(let i=0;i<26;i++){ const a=Math.PI*2*i/26, v=1.4+Math.random()*2.2;
+      parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:46+Math.random()*22,col}); } }
+  if(REDUCED){ // one static burst
+    boom(cv.width/2,cv.height/3);
+    parts.forEach(p=>{for(let k=0;k<12;k++){p.x+=p.vx;p.y+=p.vy;}
+      ctx.fillStyle=p.col; ctx.fillRect(Math.round(p.x/3)*3,Math.round(p.y/3)*3,3,3)});
+    return;
+  }
+  let frame=0;
+  boom(cv.width*.28,cv.height*.22); boom(cv.width*.72,cv.height*.18); boom(cv.width*.5,cv.height*.34);
+  function tickFw(){
+    if($('#victory').hidden){ ctx.clearRect(0,0,cv.width,cv.height); fwRaf=null; return; }
+    frame++;
+    if(frame%34===0) boom(cv.width*(.12+Math.random()*.76), cv.height*(.08+Math.random()*.42));
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(let i=parts.length-1;i>=0;i--){ const p=parts[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=.045; p.life--;
+      if(p.life<=0){parts.splice(i,1);continue;}
+      if(p.life%8<5){ ctx.fillStyle=p.col; ctx.fillRect(Math.round(p.x/3)*3,Math.round(p.y/3)*3,3,3); } }
+    fwRaf=requestAnimationFrame(tickFw);
+  }
+  tickFw();
+}
+function victory(){
+  ended=true;
+  stage('QUEST COMPLETE');
+  narr('The verdict is in. Court adjourned!');
+  $('#tTime').textContent=fmtT(simT);
+  $('#victory').hidden=false;
+  fireworks();
+  const trs=document.querySelectorAll('#tally .tr');
+  const reveal=(i)=>{ if(i>=trs.length) return; trs[i].classList.add('in'); setTimeout(()=>reveal(i+1), REDUCED?0:240); };
+  setTimeout(()=>reveal(0), REDUCED?0:500);
+  // score rollup
+  const target=128500; const el=$('#scoreN'); const t0=performance.now();
+  const dur=REDUCED?1:1800;
+  const roll=(now)=>{ const k=Math.min(1,(now-t0)/dur);
+    el.textContent=String(Math.floor(target*k/10)*10).padStart(6,'0');
+    if(k<1) requestAnimationFrame(roll); };
+  requestAnimationFrame(roll);
+  // chest opens, trophy rises
+  setTimeout(()=>{ chestClosed.hidden=true;
+    chestOpen.style.position='absolute'; chestOpen.style.left='50%';
+    chestOpen.style.bottom='0'; chestOpen.style.transform='translateX(-50%)';
+    $('#chestZone').append(chestOpen);
+    trophy.classList.add('up');
+    splash('YOU FOUND: THE TRUTH!','var(--gold)');
+  }, REDUCED?10:1400);
+}
+
+/* ---------- timeline ---------- */
+const T={ strike:11900, ruleAuto:48500, victory:53500 };
+const TL=[]; const ev=(t,fn)=>TL.push({t,fn});
+
+/* Stage 1 — the plan */
+ev(0,()=>{ stage('STAGE 1 · THE PLAN'); narr('The Judge Wizard studies the question…');
+  $('#bubble').textContent='…?'; $('#bubble').classList.add('on');
+  log('sys','A new case enters the court.');
+  log('judge','JUDGE WIZARD: "Hmm. One big question… I will split it into 9 small quests."'); });
+CLAIMS.forEach((c,i)=>{
+  ev(900+i*850,()=>{ popRoom(c);
+    if(i===0) $('#bubble').textContent='9 QUESTS!';
+    log('judge','Room '+c.id+' appears — '+c.nick+'.'); });
+});
+ev(8900,()=>{ narr('The quest map is drawn — 9 rooms, 9 claims to test.'); $('#bubble').classList.remove('on'); });
+
+/* Stage 2 — approval */
+ev(9400,()=>{ stage('STAGE 2 · YOUR APPROVAL'); narr('Your turn! Approve the quest map — or strike a room.');
+  $('#approve').hidden=false;
+  const c6=$('#room-C6'); if(c6){ c6.classList.add('suspect'); c6.querySelector('.rstate').textContent='FISHY?'; }
+  log('you','YOUR TURN: the court waits. Room C6 smells like hype…'); });
+ev(T.strike,()=>{ doStrike(); });
+
+/* Stage 3 — THE SPIN-OFF */
+ev(13100,()=>{ stage('STAGE 3 · HEROES, SET OUT!'); flash(); splash('HEROES, SET OUT!');
+  $('#doorGlow').classList.add('on'); shakeMap();
+  narr('The tower gates open — 10 heroes pour out!');
+  log('judge','JUDGE WIZARD: "Knights — find proof! Rogues — find doubt! Pip — check everything!"'); });
+AGENTS.forEach((a,i)=>{
+  ev(13500+i*340,()=>{ spawnAgent(a); setAgents(i+1);
+    const label=a.kind==='knight'?'the Knight':a.kind==='rogue'?'the Rogue':'the Owl Clerk';
+    const cls=a.kind==='knight'?'adv':a.kind==='rogue'?'skp':'clerk';
+    log(cls, a.name+' '+label+(a.room?(' → Room '+a.room+'!'):' takes watch over the whole map.')); });
+});
+ev(17200,()=>{ $('#doorGlow').classList.remove('on'); narr('10 heroes race down the paths to their rooms…'); });
+
+/* Stage 4 — the evidence hunt */
+ev(18700,()=>{ stage('STAGE 4 · THE EVIDENCE HUNT'); narr('Knights hunt proof. Rogues hunt doubt. Pip checks the loot.');
+  ['C1','C2','C3','C4','C5','C7','C8','C9'].forEach(id=>roomState(id,'fight')); });
+ev(19600,()=>{ loot('C1','scroll'); setBar('C1',65); addSrc(1);
+  log('adv','ADA found the 2013 prophecy scroll: ~2200 W/mK predicted! (+1 scroll)'); });
+ev(21100,()=>{ loot('C2','scroll'); setBar('C2',75); addSrc(1);
+  log('adv','BO found the 2018 Science paper: ~1300 W/mK — a world record!'); });
+ev(22500,()=>{ loot('C3','scroll'); setBar('C3',60); addSrc(1);
+  log('adv','CY found why old crystals failed: tiny defects! Only ~190 W/mK.'); });
+ev(23300,()=>{ roomState('C3','cleared'); setBar('C3',90);
+  log('clerk','PIP checks CY’s loot… real paper! Room C3 CLEARED.'); });
+ev(24100,()=>{ loot('C5','scroll'); loot('C5','coin'); setBar('C5',80); addSrc(2);
+  log('adv','DOT found a 2025 paper: purified arsenic → OVER 2100 W/mK! (+2 scrolls)'); });
+ev(25500,()=>{ loot('C4','coin'); setBar('C4',35); addSrc(1); shakeMap();
+  log('skp','VEX attacks: the new 2100 result SMASHES the old 1400 ceiling!'); });
+ev(26300,()=>{ roomState('C4','cursed');
+  log('skp','Room C4 is CURSED — the "speed limit" rule is in trouble.'); });
+ev(27100,()=>{ loot('C8','scroll'); setBar('C8',75); addSrc(1);
+  log('adv','ELI found a second trick (ns-TDTR) that also sees >2000!'); });
+ev(28300,()=>{ loot('C7','coin'); setBar('C7',30); addSrc(1);
+  log('skp','NYX strikes: isotopes add only 8–13%, NOT 40%!'); });
+ev(29100,()=>{ roomState('C7','cursed');
+  log('skp','Room C7 is CURSED — the +40% promise is busted.'); });
+ev(29900,()=>{ moveAgent('pip', roomPoint('C1','owl'), 900); });
+ev(30500,()=>{ roomState('C1','cleared'); setBar('C1',90); addSrc(1);
+  log('clerk','PIP flies to C1, checks the loot… sources are real! CLEARED.'); });
+ev(31500,()=>{ loot('C9','scroll'); setBar('C9',70); addSrc(1); roomState('C9','cleared');
+  log('skp','ZED maps the gem: 1500 here, 2400 there — same crystal! CLEARED (with a warning).'); });
+ev(32700,()=>{ roomState('C8','cleared'); setBar('C8',90); addSrc(1);
+  log('clerk','PIP stamps Room C8: CLEARED.'); });
+ev(33500,()=>{ roomState('C5','cleared'); setBar('C5',92); addSrc(1);
+  log('clerk','PIP stamps Room C5: CLEARED. That’s 14 scrolls of evidence!'); });
+
+/* Stage 5 — dispute brews */
+ev(34500,()=>{ moveAgent('rex', roomPoint('C2','rogue'), 700); setBar('C2',55);
+  log('skp','REX storms Room C2: "Your record is OLD, Bo — 2025 beats it!"'); });
+ev(35700,()=>{ log('adv','BO plants his shield: "Science said HIGHEST EVER. I hold my ground!"'); });
+ev(36700,()=>{ roomState('C2','boss'); shakeMap(); narr('Room C2 is erupting — nobody backs down!');
+  log('sys','Room C2 shakes… the Clerk cannot settle this one.'); });
+
+/* Stage 6 — boss battle + jury */
+ev(37900,()=>{ stage('BOSS BATTLE'); flash(); shakeMap(); });
+ev(38500,()=>{ openBoss(); });
+ev(42600,()=>{ closeBoss(); openJury(); stage('STAGE 6 · YOU RULE');
+  narr('Paused — the court waits for YOUR ruling on C2.');
+  log('you','THE COURT CALLS THE JURY: that’s you. Choose a champion!'); });
+ev(T.ruleAuto,()=>{ rule('2025'); });
+ev(50000,()=>{ closeJury(); roomState('C2','ruled'); setBar('C2',88);
+  stampRoom('C2','RULED',true); shakeMap(); });
+
+/* Stage 7 — verdict + victory */
+ev(50900,()=>{ stage('STAGE 7 · THE VERDICT'); narr('The Wizard writes the final scroll…');
+  $('#bubble').textContent='✍'; $('#bubble').classList.add('on');
+  Object.values(liveAgents).forEach(la=>la.el.classList.add('cheer'));
+  log('judge','JUDGE WIZARD: "Court adjourned. Every number, from a real paper. Here is your verdict."'); });
+ev(T.victory,()=>{ $('#bubble').classList.remove('on'); victory(); });
+
+TL.sort((a,b)=>a.t-b.t);
+
+/* ---------- engine ---------- */
+let simT=0, speed=1, started=false, ended=false, evIdx=0, lastNow=0, ffMode=false, rafId=null;
+function loop(now){
+  if(!started) return;
+  const dt=Math.min(100, now-lastNow); lastNow=now;
+  if(!ended) simT+=dt*speed;
+  while(evIdx<TL.length && TL[evIdx].t<=simT){ TL[evIdx++].fn(); }
+  $('#cTime').textContent=fmtT(simT);
+  rafId=requestAnimationFrame(loop);
+}
+function startRun(){
+  $('#start').hidden=true;
+  started=true; lastNow=performance.now();
+  rafId=requestAnimationFrame(loop);
+}
+function resetRun(){
+  if(rafId) cancelAnimationFrame(rafId); if(fwRaf) cancelAnimationFrame(fwRaf);
+  simT=0; evIdx=0; ended=false; juryDone=false; approved=false; ruledFor=null; srcN=0; ffMode=false;
+  roomsBox.innerHTML=''; agentsBox.innerHTML=''; logBox.innerHTML=''; tq.length=0; typing=false;
+  Object.keys(liveAgents).forEach(k=>delete liveAgents[k]);
+  $('#paths').innerHTML='';
+  $('#cSrc').textContent='0'; $('#cAg').textContent='0'; $('#cTime').textContent='0:00';
+  ['#approve','#boss','#jury','#victory'].forEach(s=>$(s).hidden=true);
+  $('#bubble').classList.remove('on'); $('#doorGlow').classList.remove('on');
+  $('#juryA').classList.remove('won','dim'); $('#juryB').classList.remove('won','dim');
+  document.querySelectorAll('#jury .stamp').forEach(e=>e.remove());
+  document.querySelectorAll('#tally .tr').forEach(e=>e.classList.remove('in'));
+  $('#scoreN').textContent='000000';
+  chestClosed.hidden=false; if(chestOpen.parentNode) chestOpen.remove(); trophy.classList.remove('up');
+  started=true; lastNow=performance.now(); rafId=requestAnimationFrame(loop);
+}
+function skipFinale(){
+  if(ended) return;
+  if(!started) startRun();
+  ffMode=true; document.body.classList.add('ff'); flushLog();
+  while(evIdx<TL.length && TL[evIdx].t<=T.victory){ simT=TL[evIdx].t; TL[evIdx++].fn(); }
+  simT=T.victory; flushLog();
+  setTimeout(()=>{ document.body.classList.remove('ff'); ffMode=false; drawPaths(); placeParkedAgents(); },120);
+}
+$('#btnStart').addEventListener('click',startRun);
+$('#btnAgain').addEventListener('click',()=>{ resetRun(); });
+$('#btnReplay').addEventListener('click',()=>{ if(!started){startRun(); return;} resetRun(); });
+$('#btnSkip').addEventListener('click',skipFinale);
+document.querySelectorAll('#speeds button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#speeds button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); speed=+b.dataset.s;
+  });
+});
+
+/* layout settles after pixel fonts load */
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ drawPaths(); placeParkedAgents(); });
+
+/* test hook (harmless in production) */
+window.__test={ t:()=>simT, setSpeed:n=>{speed=n;
+    document.querySelectorAll('#speeds button').forEach(x=>x.classList.toggle('on',+x.dataset.s===n));},
+  start:startRun };
+</script>

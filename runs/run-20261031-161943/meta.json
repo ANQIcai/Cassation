@@ -1,0 +1,21 @@
+{
+  "run_id": "run-20261031-161943",
+  "question": "ping",
+  "mode": "mock",
+  "started_at": "2026-10-31T16:19:43",
+  "finished_at": "2026-10-31T16:19:44",
+  "status": "ok",
+  "counts": {
+    "claims": 9,
+    "struck": 0,
+    "agents": 19,
+    "sources": 9,
+    "excluded": 0,
+    "verdicts": {
+      "SUPPORTED": 7,
+      "HUMAN_ADJUDICATED": 1,
+      "REFUTED": 1
+    },
+    "events": 204
+  }
+}

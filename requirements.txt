@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+websockets
+pydantic>=2
+httpx
+qrcode[pil]
+pillow
+google-genai==2.34.0

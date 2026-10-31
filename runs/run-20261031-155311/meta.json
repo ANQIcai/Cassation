@@ -1,0 +1,18 @@
+{
+ "run_id": "run-20261031-155311",
+ "question": "Is an air fryer really cheaper to run than an electric oven?",
+ "mode": "mock",
+ "started_at": "2026-10-31T15:53:11",
+ "finished_at": "2026-10-31T15:53:17.610000",
+ "status": "ok",
+ "counts": {
+  "claims": 9,
+  "events": 210,
+  "verdicts": {
+   "SUPPORTED": 7,
+   "HUMAN_ADJUDICATED": 1,
+   "REFUTED": 1
+  },
+  "duration_s": 6.61
+ }
+}

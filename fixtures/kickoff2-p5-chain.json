@@ -1,0 +1,100 @@
+{
+ "r1": {
+  "status": "completed",
+  "continuation_ids": [
+   "v1_ChZlZjdsYXNPQ0tjZUQ3TThQMktTSldBEhZlZjdsYXNPQ0tjZUQ3TThQMktTSldB"
+  ],
+  "created": "2026-10-31T14:43:08Z",
+  "id": "v1_ChZlZjdsYXNPQ0tjZUQ3TThQMktTSldBEhZlZjdsYXNPQ0tjZUQ3TThQMktTSldB",
+  "model": "gemini-4-argon",
+  "output_text": "OK.",
+  "service_tier": "standard",
+  "steps": [
+   {
+    "signature": "ElkKVwFpFH0TvoypXs4zWWWdkd5EmRLjOgURyiQmywMnnTsH8RsB/WGDgpj0IoUEIOGVwLHSOFwUT0Thp45HQLUZKhNTg1BeY22Mj8KCxowGKQpYIHeVmKA8Fg==",
+    "type": "thought"
+   },
+   {
+    "content": [
+     {
+      "text": "OK.",
+      "type": "text"
+     }
+    ],
+    "type": "model_output"
+   }
+  ],
+  "updated": "2026-10-31T14:43:08Z",
+  "usage": {
+   "initial_input_tokens": 51,
+   "input_tokens_by_modality": [
+    {
+     "modality": "text",
+     "tokens": 51
+    }
+   ],
+   "output_tokens_by_modality": [
+    {
+     "modality": "text",
+     "tokens": 6
+    }
+   ],
+   "total_cached_tokens": 0,
+   "total_input_tokens": 51,
+   "total_output_tokens": 6,
+   "total_thought_tokens": 0,
+   "total_tokens": 57,
+   "total_tool_use_tokens": 0
+  },
+  "object": "interaction"
+ },
+ "r2": {
+  "status": "completed",
+  "continuation_ids": [
+   "v1_ChZlZjdsYXNPQ0tjZUQ3TThQMktTSldBEhZmZjdsYW9fTk90alBuc0VQMlAzVGNB"
+  ],
+  "created": "2026-10-31T14:43:12Z",
+  "id": "v1_ChZlZjdsYXNPQ0tjZUQ3TThQMktTSldBEhZmZjdsYW9fTk90alBuc0VQMlAzVGNB",
+  "model": "gemini-4-argon",
+  "output_text": "VIOLET-KANGAROO",
+  "service_tier": "standard",
+  "steps": [
+   {
+    "signature": "ElkKVwFpFH0TA8Ma5FCHp2acQNnrZUnWcWeRiEdsVtQIzWezvLElVViCOEBg4XXPbsBeCRxAQpBNV1PyvjNQM/ioR0+q4vLe94CdRwTHsDEQnfHvXANk1jWKbg==",
+    "type": "thought"
+   },
+   {
+    "content": [
+     {
+      "text": "VIOLET-KANGAROO",
+      "type": "text"
+     }
+    ],
+    "type": "model_output"
+   }
+  ],
+  "updated": "2026-10-31T14:43:12Z",
+  "usage": {
+   "initial_input_tokens": 78,
+   "input_tokens_by_modality": [
+    {
+     "modality": "text",
+     "tokens": 78
+    }
+   ],
+   "output_tokens_by_modality": [
+    {
+     "modality": "text",
+     "tokens": 11
+    }
+   ],
+   "total_cached_tokens": 0,
+   "total_input_tokens": 78,
+   "total_output_tokens": 11,
+   "total_thought_tokens": 0,
+   "total_tokens": 89,
+   "total_tool_use_tokens": 0
+  },
+  "object": "interaction"
+ }
+}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CASSATION</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-view="idle">
+
+<header id="header">
+  <div class="brand">&#9878; CASSATION</div>
+  <div id="question" class="question"></div>
+  <div class="head-right">
+    <button id="docket-btn" class="btn ghost" type="button">DOCKET</button>
+    <span id="conn-dot" class="conn off" title="WebSocket"></span>
+    <span id="mode-chip" class="mode-chip mode-idle">IDLE</span>
+  </div>
+</header>
+
+<div id="cost-strip">
+  <span class="cs"><b id="cost-est">&pound;0.00</b><small>cost &middot; estimate</small></span>
+  <span class="cs"><b id="cost-sources">0</b><small>sources</small></span>
+  <span class="cs"><b id="cost-agents">0 live &middot; 0 done</b><small>agents</small></span>
+  <span class="cs"><b id="cost-elapsed">0:00</b><small>elapsed</small></span>
+  <span class="cs"><b id="phase">&mdash;</b><small>phase</small></span>
+</div>
+
+<div id="judge-strip">
+  <span class="judge-label">JUDGE &middot; gemini-4-argon</span>
+  <span id="judge-ticker"></span>
+  <span id="leaf-model" class="judge-label leaf-model"></span>
+</div>
+
+<main id="main">
+  <section id="idle-view">
+    <h1>The court is assembled.</h1>
+    <p class="tagline">Paste a contested technical question. Every claim goes on trial:
+       Advocates argue for it, Skeptics attack it, and what they cannot settle, you rule on.</p>
+    <form id="run-form" autocomplete="off">
+      <input id="question-input" type="text"
+             placeholder="e.g. Is the lattice thermal conductivity of cubic BAs really ~2200 W/mK?">
+      <button class="btn primary" type="submit">OPEN THE CASE</button>
+    </form>
+    <div id="run-error" class="run-error"></div>
+    <div id="idle-docket" class="docket-grid"></div>
+  </section>
+
+  <section id="board"></section>
+
+  <aside id="verdict-panel" hidden>
+    <div class="vp-head">RESEARCH VERDICT <span id="vp-status">streaming&hellip;</span></div>
+    <div id="verdict-body"></div>
+    <div id="verdict-cites" hidden>
+      <h3 class="vp-sub">Citations</h3>
+      <ol id="cites-list"></ol>
+      <div id="brief-link"></div>
+    </div>
+  </aside>
+</main>
+
+<!-- Human gate 1: plan approval -->
+<div id="approval-overlay" class="overlay" hidden>
+  <div class="dialog">
+    <div class="d-head">APPROVE THE PLAN
+      <span class="d-sub">click a row to strike it &mdash; struck branches never run</span>
+    </div>
+    <div id="approval-rows"></div>
+    <div class="d-foot">
+      <span id="approval-est"></span>
+      <button id="approve-btn" class="btn primary" type="button">APPROVE &amp; EMPANEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- Human gate 2: the jury -->
+<div id="jury-overlay" class="overlay" hidden>
+  <div class="dialog jury">
+    <div class="d-head">&#9878; THE JURY
+      <span class="d-sub">the agents cannot settle this &mdash; a human must rule</span>
+    </div>
+    <div id="jury-question"></div>
+    <div id="jury-options"></div>
+  </div>
+</div>
+
+<!-- DISPUTED full-screen takeover -->
+<div id="takeover" hidden>
+  <div class="tk-title">DISPUTED</div>
+  <div class="tk-claim" id="takeover-claim"></div>
+  <div class="tk-flip"><span id="tk-chip" class="tk-chip">SUPPORTED</span></div>
+  <div class="tk-quotes">
+    <div class="tk-quote" id="takeover-left"></div>
+    <div class="tk-vs">vs</div>
+    <div class="tk-quote" id="takeover-right"></div>
+  </div>
+</div>
+
+<!-- Docket wall -->
+<div id="docket-overlay" class="overlay" hidden>
+  <div class="dialog docket">
+    <div class="d-head">THE DOCKET
+      <span class="d-sub">case files &mdash; click one to replay it</span>
+      <button id="docket-close" class="btn ghost" type="button">CLOSE</button>
+    </div>
+    <div id="docket-list" class="docket-grid"></div>
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

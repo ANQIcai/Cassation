@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CASSATION</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-view="idle">
+
+<!-- A — header -->
+<header id="header">
+  <div class="brand">&#9878;<b>CASSATION</b></div>
+  <div id="question" class="question"></div>
+  <div class="head-right">
+    <button id="docket-btn" class="btn ghost" type="button">Docket</button>
+    <span id="mode-chip" class="mode-chip mode-idle" title="connecting&hellip;"><i id="conn-dot" class="conn off"></i><span id="mode-text">IDLE</span></span>
+  </div>
+</header>
+
+<!-- gate + guardrail banners -->
+<div id="gate-banner" hidden>
+  <span class="gb-mark">&#9670;</span>
+  <span id="gate-banner-text">Run paused &mdash; waiting for your decision</span>
+</div>
+<div id="guard-banner" hidden></div>
+
+<!-- B — pipeline stepper + narration + counters -->
+<section id="pipeline" aria-label="Trial pipeline">
+  <ol id="stepper"></ol>
+  <div class="pipe-foot">
+    <p id="narration">The court assembles&hellip;</p>
+    <div id="counters">
+      <span class="ct"><b id="ct-cost">&pound;0.00</b><i>estimate</i></span>
+      <span class="ct"><b id="ct-sources">0</b><i>sources</i></span>
+      <span class="ct"><b id="ct-agents">0 live &middot; 0 done</b><i>agents</i></span>
+      <span class="ct"><b id="ct-clock">0:00</b><i>elapsed</i></span>
+    </div>
+  </div>
+</section>
+
+<!-- C + D — claim board and court record / verdict -->
+<main id="stage">
+  <section id="board-col" aria-label="Claim board">
+    <section id="board">
+      <div class="board-empty" id="board-empty">The Judge is drafting the claim board&hellip;</div>
+    </section>
+    <!-- struck/excluded claims pin here: a slim row is always fully visible, never
+         straddling the scroll fold -->
+    <div id="board-dead" hidden></div>
+  </section>
+
+  <aside id="court">
+    <div class="court-tabs" role="tablist">
+      <button id="tab-record" class="ctab on" role="tab" aria-selected="true" type="button">Court record</button>
+      <button id="tab-verdict" class="ctab" role="tab" aria-selected="false" type="button">Verdict</button>
+    </div>
+    <div class="court-legend" title="judge gemini-4-argon &middot; leaves gemini-3.8-flash &middot; clerk gemini-3.5-flash-lite">judge <b><span class="full">gemini-4-argon</span><span class="short">argon</span></b> &middot; leaves <b id="leaf-model">3.8-flash</b> &middot; clerk <b>flash-lite</b></div>
+
+    <div id="record-pane" role="tabpanel">
+      <div id="record-feed"></div>
+      <button id="jump-live" type="button" hidden>jump to live &darr;</button>
+    </div>
+
+    <div id="verdict-pane" role="tabpanel" hidden>
+      <div id="verdict-chips"></div>
+      <div class="vp-head">Verdict <span id="vp-status">streaming&hellip;</span></div>
+      <div id="verdict-body"><p class="vp-empty">The verdict is written at the end of the trial.</p></div>
+      <div id="verdict-ledger" hidden></div>
+      <div id="completion-card" hidden></div>
+    </div>
+  </aside>
+</main>
+
+<!-- idle hero -->
+<section id="hero">
+  <div class="hero-core">
+    <p class="hero-eyebrow">Adversarial research court</p>
+    <h1 class="hero-brand">&#9878; CASSATION</h1>
+    <p class="hero-tagline">Adversarial due-diligence for claims you&rsquo;re about to spend money on.</p>
+    <p class="hero-sub">Advocates argue for every claim. Skeptics attack it. What they can&rsquo;t settle, you rule on &mdash; and the verdict carries the receipts.</p>
+    <form id="run-form" autocomplete="off">
+      <input id="question-input" type="text" placeholder="Put a question on trial&hellip;" aria-label="Question to put on trial">
+      <button class="btn primary" type="submit">Open the case</button>
+      <button id="demo-btn" class="btn ghost" type="button">Try the demo question</button>
+    </form>
+    <div id="run-error" class="run-error" role="alert"></div>
+    <div class="ex-chips" id="ex-chips">
+      <button class="ex-chip" type="button">Is it safe to charge an e-bike battery indoors overnight?</button>
+      <button class="ex-chip" type="button">Does overpaying the mortgage beat investing the spare cash?</button>
+      <button class="ex-chip" type="button">Is my landlord right that the mould in my flat is harmless condensation?</button>
+      <button class="ex-chip" type="button">Is an air fryer really cheaper to run than an electric oven?</button>
+    </div>
+  </div>
+  <ol class="how-strip" aria-label="How it works">
+    <li><span class="hs-node"></span><span class="hs-text">The Judge decomposes the question into testable claims</span></li>
+    <li class="human"><span class="hs-node"></span><span class="hs-text">You approve the plan &mdash; strike anything</span></li>
+    <li><span class="hs-node"></span><span class="hs-text">Advocates vs Skeptics argue with live sources</span></li>
+    <li class="human"><span class="hs-node"></span><span class="hs-text">You rule what they can&rsquo;t settle</span></li>
+    <li><span class="hs-node"></span><span class="hs-text">A cited verdict, with the receipts</span></li>
+  </ol>
+  <div class="hero-docket">
+    <h2 class="hd-head">The docket <span>past cases &mdash; click one to replay it &middot; or press <kbd>R</kbd> for the latest</span></h2>
+    <div id="idle-docket" class="docket-grid"></div>
+  </div>
+</section>
+
+<!-- evidence drawer (slides over column D; gates and takeover render above it) -->
+<aside id="drawer" hidden aria-label="Evidence drawer">
+  <div class="drawer-head">
+    <span id="drawer-cid" class="cid">C1</span>
+    <span id="drawer-branch" class="c-branch"></span>
+    <span id="drawer-pill" class="c-pill">PENDING</span>
+    <button id="drawer-close" class="btn ghost icon" type="button" aria-label="Close drawer">&#10005;</button>
+  </div>
+  <div id="drawer-body"></div>
+</aside>
+
+<!-- human gate 1: plan approval -->
+<div id="approval-overlay" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-label="Approve the plan">
+    <div class="sheet-head">
+      <span class="sheet-mark">&#9670;</span>
+      <div>
+        <h2>Approve the plan</h2>
+        <p class="sheet-sub">The Judge filed this plan. Strike any claim you don&rsquo;t want investigated &mdash; struck claims never run.</p>
+      </div>
+    </div>
+    <div id="approval-rows"></div>
+    <div class="sheet-foot">
+      <span id="approval-recount"></span>
+      <button id="approve-btn" class="btn primary" type="button">Approve &amp; empanel</button>
+    </div>
+  </div>
+</div>
+
+<!-- human gate 2: the jury -->
+<div id="jury-overlay" class="overlay" hidden>
+  <div class="sheet jury" role="dialog" aria-label="The jury">
+    <div class="sheet-head">
+      <span class="sheet-mark">&#9670;</span>
+      <div>
+        <h2>The agents cannot settle this &mdash; you rule</h2>
+        <p class="sheet-sub">Your ruling is stamped human-adjudicated, permanently.</p>
+      </div>
+    </div>
+    <div id="jury-question"></div>
+    <div id="jury-options"></div>
+  </div>
+</div>
+
+<!-- DISPUTED full-bleed takeover (kept design, new tokens; z above everything) -->
+<div id="takeover" hidden>
+  <div class="tk-title">DISPUTED</div>
+  <div class="tk-meta" id="tk-meta" hidden><span class="tk-cid" id="tk-cid"></span></div>
+  <div class="tk-claim" id="takeover-claim"></div>
+  <div class="tk-flip"><span id="tk-chip" class="tk-chip">SUPPORTED</span></div>
+  <div class="tk-quotes">
+    <div class="tk-quote" id="takeover-left"></div>
+    <div class="tk-vs">vs</div>
+    <div class="tk-quote" id="takeover-right"></div>
+  </div>
+  <div class="tk-standby">The court will call you to rule &mdash; stand by</div>
+</div>
+
+<!-- docket wall -->
+<div id="docket-overlay" class="overlay" hidden>
+  <div class="sheet docket" role="dialog" aria-label="The docket">
+    <div class="sheet-head">
+      <div>
+        <h2>The docket</h2>
+        <p class="sheet-sub">Case files &mdash; click one to replay it.</p>
+      </div>
+      <button id="docket-close" class="btn ghost icon" type="button" aria-label="Close docket">&#10005;</button>
+    </div>
+    <div id="docket-list" class="docket-grid"></div>
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

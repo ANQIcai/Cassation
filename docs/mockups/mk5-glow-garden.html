@@ -1,0 +1,939 @@
+<title>Glow Garden</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,600&family=Nunito:wght@400;700;800;900&display=swap">
+<style>
+:root{
+  --night:#05081c; --sky2:#0b1134; --panel:#0c1232; --panel2:#121a46;
+  --line:#26306b; --line-soft:#1a2352;
+  --moonlight:#f0f3ff; --text:#dfe5ff; --muted:#8d97cf; --faint:#5e67a3;
+  --emerald:#41f2a7; --emerald-soft:#1fae74;
+  --ember:#ff8258; --ember-soft:#e05a33;
+  --amber:#ffc95e; --gold:#ffe3a1;
+  --disp:"Fraunces",Georgia,serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--night)}
+body{margin:0;background:var(--night);color:var(--text);font-family:var(--body);overflow:hidden}
+*{box-sizing:border-box}
+button{font-family:var(--body);cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:8px}
+
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  background:var(--night)}
+
+/* ---------- top bar ---------- */
+#topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:8px 16px;border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#0a0f2e,#070b22)}
+#brand{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--gold);
+  display:flex;align-items:center;gap:8px;white-space:nowrap}
+#brand .sub{font-family:var(--body);font-weight:700;font-size:10px;letter-spacing:.18em;
+  color:var(--faint);text-transform:uppercase}
+#counters{display:flex;gap:14px;margin-left:auto;font-family:var(--mono);font-size:12px;
+  color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+#counters b{color:var(--gold);font-weight:400}
+#ctrls{display:flex;gap:8px}
+.ctl{background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800}
+.ctl:hover{color:var(--moonlight);border-color:var(--amber)}
+#btnSkip{background:transparent;border-color:transparent;text-decoration:underline dotted;text-underline-offset:3px}
+
+/* ---------- main grid ---------- */
+#main{display:grid;grid-template-columns:1fr 344px;min-height:0}
+@media (max-width:760px){
+  #main{grid-template-columns:1fr;grid-template-rows:1fr minmax(150px,30%)}
+  #counters{display:none}
+}
+
+/* ---------- scene ---------- */
+#scene{position:relative;overflow:hidden;min-height:0;
+  background:
+   radial-gradient(130% 90% at 50% 118%, #10194a 0%, #0a1136 38%, transparent 62%),
+   radial-gradient(60% 50% at 78% 8%, #0e1540 0%, transparent 70%),
+   linear-gradient(180deg,#04061a 0%,#070c26 55%,#0a1033 100%)}
+#fx{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+#moon{position:absolute;right:7%;top:7%;width:54px;height:54px;border-radius:50%;z-index:2;
+  background:radial-gradient(circle at 38% 35%,#fff,#dfe6ff 60%,#aab6f0);
+  box-shadow:0 0 34px 10px rgba(205,215,255,.35),0 0 90px 30px rgba(140,160,255,.12)}
+#ground{position:absolute;left:-12%;right:-12%;bottom:-14%;height:34%;z-index:3;border-radius:50% 50% 0 0;
+  background:radial-gradient(90% 100% at 50% 0%, #0e1742 0%, #0a1033 45%, #070b26 100%);
+  box-shadow:0 -1px 24px rgba(111,125,255,.14)}
+
+#tree{position:absolute;z-index:10;left:4%;bottom:4%;width:min(42%,360px);pointer-events:none}
+#tree svg{width:100%;height:auto;display:block;overflow:visible}
+.canopy{transition:filter .6s}
+#tree.thinking .canopy{animation:canopyPulse 1.6s ease-in-out infinite}
+@keyframes canopyPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.45)}}
+#tree.verdicting .canopy{animation:canopyPulse 1s ease-in-out infinite}
+.mote{animation:moteRise 5s linear infinite;opacity:0}
+@keyframes moteRise{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-70px);opacity:0}}
+#fruitG{opacity:0;transition:opacity 1.2s}
+#fruitG.show{opacity:1}
+#fruitG .fruit-core{animation:fruitGlow 2.4s ease-in-out infinite}
+@keyframes fruitGlow{0%,100%{opacity:.85}50%{opacity:1}}
+.treeEye{transition:transform .5s}
+#tree.thinking .treeEye{transform:translateY(-2px)}
+
+/* ---------- buds ---------- */
+.bud{position:absolute;z-index:20;width:clamp(46px,7.5vw,70px);
+  left:var(--x);top:var(--y);transform:translate(-50%,-100%);
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  opacity:0;transition:opacity .5s, transform .5s}
+.bud.in{opacity:1}
+.bud.pop{animation:budPop .55s cubic-bezier(.34,1.56,.64,1)}
+@keyframes budPop{0%{transform:translate(-50%,-100%) scale(.2)}70%{transform:translate(-50%,-100%) scale(1.15)}100%{transform:translate(-50%,-100%) scale(1)}}
+.bud svg{width:100%;height:auto;overflow:visible;filter:drop-shadow(0 0 6px rgba(111,125,255,.35))}
+.bud .head{transform-origin:40px 62px;transition:transform .7s}
+.bud .open{opacity:0;transform:scale(.1);transform-origin:40px 40px;transition:transform .7s cubic-bezier(.34,1.56,.64,1),opacity .4s}
+.bud .closed{transition:opacity .4s}
+.bud .petal{fill:#39407e;transition:fill .5s}
+.bud .shut{fill:#2b3370;stroke:#4a55a8;transition:fill .5s,stroke .5s}
+.bud .core{fill:#9aa3d0;transition:fill .5s}
+.bud .chip{font-family:var(--mono);font-size:10px;color:var(--faint);background:#0b1232cc;
+  border:1px solid var(--line-soft);border-radius:6px;padding:0 5px;line-height:15px}
+.bud .lbl{font-size:10px;font-weight:800;color:var(--muted);text-align:center;line-height:1.15;
+  max-width:100px;text-shadow:0 1px 4px #000}
+.bud .stamp{display:none;position:absolute;top:8%;left:50%;
+  font:900 11px/1 var(--body);letter-spacing:.14em;padding:3px 7px;border-radius:4px;white-space:nowrap}
+.bud.state-running svg{animation:budBreath 1.1s ease-in-out infinite}
+@keyframes budBreath{0%,100%{filter:drop-shadow(0 0 5px rgba(140,160,255,.4))}50%{filter:drop-shadow(0 0 14px rgba(170,190,255,.95))}}
+.bud.state-green .closed,.bud.state-red .closed,.bud.state-amber .closed{opacity:0}
+.bud.state-green .open,.bud.state-red .open,.bud.state-amber .open{opacity:1;transform:scale(1)}
+.bud.state-green svg{filter:drop-shadow(0 0 12px rgba(65,242,167,.9))}
+.bud.state-green .petal{fill:var(--emerald)}
+.bud.state-green .core{fill:#eafff5}
+.bud.state-green .lbl{color:var(--emerald)}
+.bud.state-red svg{filter:drop-shadow(0 0 12px rgba(255,130,88,.9))}
+.bud.state-red .petal{fill:var(--ember)}
+.bud.state-red .core{fill:#ffe9df}
+.bud.state-red .head{transform:rotate(24deg)}
+.bud.state-red .lbl{color:var(--ember)}
+.bud.state-amber svg{filter:drop-shadow(0 0 18px rgba(255,201,94,1))}
+.bud.state-amber .petal{fill:var(--amber)}
+.bud.state-amber .core{fill:#fff}
+.bud.state-amber .lbl{color:var(--amber)}
+.bud.state-amber.pulsing svg{animation:amberPulse .8s ease-in-out infinite}
+@keyframes amberPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(255,201,94,.7))}50%{filter:drop-shadow(0 0 22px rgba(255,201,94,1))}}
+.bud.state-struck{opacity:.45;filter:saturate(.2)}
+.bud.state-struck .stamp{display:block;color:#ff9d9d;border:2px solid #ff9d9d;background:#1a0f14ee;
+  transform:translateX(-50%) rotate(-12deg);animation:stampSlam .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes stampSlam{0%{transform:translateX(-50%) rotate(-12deg) scale(3);opacity:0}100%{transform:translateX(-50%) rotate(-12deg) scale(1);opacity:1}}
+.bud.finale svg{filter:drop-shadow(0 0 20px currentColor) brightness(1.3)}
+
+/* ---------- sprites ---------- */
+.sprite{position:absolute;z-index:30;left:0;top:0;width:52px;margin-left:-26px;margin-top:-30px;
+  display:flex;flex-direction:column;align-items:center;opacity:0;transition:opacity .4s;pointer-events:none}
+.sprite.on{opacity:1}
+.sprite .halo{position:absolute;top:-6px;width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle,var(--c) 0%,transparent 62%);opacity:.45;filter:blur(3px)}
+.sprite svg{width:52px;height:52px;position:relative}
+.sprite .bod{fill:var(--c)}
+.sprite .wing{fill:#ffffff;opacity:.55;transform-origin:32px 26px;animation:flut .22s ease-in-out infinite alternate}
+.sprite .wingL{animation-name:flutL}
+@keyframes flut{from{transform:rotate(6deg)}to{transform:rotate(26deg)}}
+@keyframes flutL{from{transform:rotate(-6deg)}to{transform:rotate(-26deg)}}
+.sprite .eyeW{fill:#fff}
+.sprite .pup{fill:#0a0f2e;transition:transform .4s}
+.sprite.working .pup{transform:translateY(1.6px)}
+.sprite .lid{fill:var(--c);transform-origin:32px 30px;transform:scaleY(0);animation:blink 4.2s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(0)}96%,98%{transform:scaleY(1)}}
+.sprite .mouth{stroke:#0a0f2e;stroke-width:1.6;fill:none;stroke-linecap:round}
+.sprite .tag{font-size:10px;font-weight:900;color:var(--c);text-shadow:0 1px 4px #000;margin-top:-6px;
+  letter-spacing:.04em}
+.sprite.adv{--c:var(--emerald)}
+.sprite.skp{--c:var(--ember)}
+.sprite.clk{--c:#cdd6ff}
+.sprite.working svg{animation:bob 1.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ---------- narration & flash title ---------- */
+#narration{position:absolute;z-index:35;top:12px;left:50%;transform:translateX(-50%);width:min(92%,640px);
+  text-align:center;font-family:var(--disp);font-style:italic;font-weight:600;
+  font-size:clamp(15px,2.6vw,21px);color:var(--gold);text-shadow:0 0 18px rgba(255,201,94,.35),0 2px 6px #000;
+  text-wrap:balance;pointer-events:none;transition:opacity .4s}
+#flashTitle{position:absolute;z-index:45;inset:0;display:none;align-items:center;justify-content:center;
+  text-align:center;pointer-events:none;padding:0 16px}
+#flashTitle.show{display:flex}
+#flashTitle .t{font-family:var(--disp);font-weight:900;font-size:clamp(28px,6.5vw,58px);
+  color:var(--moonlight);text-shadow:0 0 30px rgba(255,201,94,.8),0 0 70px rgba(111,125,255,.7);
+  animation:titleZoom 1.9s cubic-bezier(.22,1,.36,1) forwards;text-wrap:balance}
+@keyframes titleZoom{0%{transform:scale(.4);opacity:0}18%{transform:scale(1.06);opacity:1}
+  70%{transform:scale(1);opacity:1}100%{transform:scale(1.15);opacity:0}}
+
+/* ---------- overlays & cards ---------- */
+.overlay{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(3,5,18,.6);backdrop-filter:blur(4px);transition:opacity .5s;overflow:auto}
+.overlay.hide{opacity:0;pointer-events:none}
+.card{margin:auto;background:linear-gradient(180deg,#121a46,#0c1232);border:1px solid var(--line);
+  border-radius:18px;padding:22px 24px;max-width:560px;width:100%;text-align:center;
+  box-shadow:0 0 60px rgba(111,125,255,.25),0 20px 50px #000}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:.24em;color:var(--amber);text-transform:uppercase}
+.card h1{font-family:var(--disp);font-weight:900;font-size:clamp(20px,4vw,30px);margin:10px 0 6px;
+  color:var(--moonlight);text-wrap:balance;line-height:1.2}
+.card p{color:var(--muted);font-size:14px;margin:6px 0 0;line-height:1.5}
+.bigbtn{margin-top:18px;background:linear-gradient(180deg,var(--amber),#e8a93c);color:#231503;
+  font-weight:900;font-size:17px;border:none;border-radius:999px;padding:13px 30px;
+  box-shadow:0 0 28px rgba(255,201,94,.55),0 6px 0 #8a6220;transition:transform .15s}
+.bigbtn:hover{transform:scale(1.05)}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 0 28px rgba(255,201,94,.55),0 2px 0 #8a6220}
+#startCast{display:flex;justify-content:center;gap:5px;margin-top:14px;flex-wrap:wrap}
+#startCast .cd{width:14px;height:14px;border-radius:50%;box-shadow:0 0 8px currentColor}
+
+#approval{position:absolute;z-index:40;left:50%;top:54px;transform:translate(-50%,-160%);
+  visibility:hidden;opacity:0;
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .3s,visibility 0s .5s;width:min(94%,520px);
+  background:linear-gradient(180deg,#2b2410,#1b1706);border:1.5px solid var(--amber);border-radius:14px;
+  padding:12px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 0 30px rgba(255,201,94,.35)}
+#approval.show{transform:translate(-50%,0);visibility:visible;opacity:1;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .3s}
+#approval .txt{flex:1;font-size:13px;color:var(--gold);line-height:1.35}
+#approval .txt b{color:#fff}
+#btnApprove{background:var(--amber);border:none;color:#231503;font-weight:900;border-radius:999px;
+  padding:9px 16px;font-size:13px;white-space:nowrap;box-shadow:0 0 16px rgba(255,201,94,.5)}
+
+/* ---------- dispute / jury ---------- */
+#dispute .beams{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.beam{position:absolute;top:50%;height:5px;width:48%;border-radius:4px;filter:blur(1px)}
+.beamL{left:-50%;background:linear-gradient(90deg,transparent,var(--emerald));box-shadow:0 0 18px var(--emerald);
+  animation:beamL .9s ease-in forwards}
+.beamR{right:-50%;background:linear-gradient(270deg,transparent,var(--ember));box-shadow:0 0 18px var(--ember);
+  animation:beamR .9s ease-in forwards}
+@keyframes beamL{to{left:3%}}
+@keyframes beamR{to{right:3%}}
+#dispute .inner{position:relative;max-width:860px;width:100%;text-align:center;margin:auto}
+#dispute h2{font-family:var(--disp);font-weight:900;font-size:clamp(22px,4.6vw,40px);color:var(--amber);
+  margin:0 0 4px;text-shadow:0 0 30px rgba(255,201,94,.7)}
+#dispute .sub{color:var(--muted);font-size:14px;min-height:20px;font-weight:700}
+#dispute .vs{display:flex;gap:14px;margin-top:18px;align-items:stretch;justify-content:center}
+@media (max-width:620px){#dispute .vs{flex-direction:column}}
+.srcCard{flex:1;max-width:360px;background:#0c1232;border-radius:16px;padding:16px;text-align:left;
+  border:2px solid var(--cc);box-shadow:0 0 24px color-mix(in srgb,var(--cc) 45%,transparent);
+  position:relative;transition:transform .2s}
+.srcCard .who{font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--cc);text-transform:uppercase}
+.srcCard .num{font-family:var(--disp);font-weight:900;font-size:clamp(26px,4.5vw,40px);color:#fff;margin:6px 0}
+.srcCard .num small{font-size:.45em;color:var(--muted);font-weight:700}
+.srcCard .q{font-family:var(--disp);font-style:italic;font-size:14px;color:var(--text);line-height:1.45}
+.srcCard .src{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.srcCard.L{--cc:var(--emerald)}
+.srcCard.R{--cc:var(--ember)}
+#dispute.juryMode .srcCard{cursor:pointer}
+#dispute.juryMode .srcCard:hover{transform:scale(1.04);box-shadow:0 0 40px var(--cc)}
+.srcCard .ruled{display:none;position:absolute;top:10px;right:10px;transform:rotate(8deg);
+  font:900 12px/1 var(--body);letter-spacing:.12em;color:#2a1a00;background:var(--amber);
+  padding:6px 9px;border-radius:5px;box-shadow:0 0 20px var(--amber)}
+.srcCard.chosen .ruled{display:block;animation:stampSlam2 .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes stampSlam2{0%{transform:rotate(8deg) scale(3);opacity:0}100%{transform:rotate(8deg) scale(1);opacity:1}}
+.srcCard.dimmed{opacity:.35;filter:saturate(.3)}
+#flash{position:absolute;inset:0;z-index:48;background:radial-gradient(circle at 50% 50%,#fff8e6,#ffc95e 40%,transparent 75%);
+  opacity:0;pointer-events:none}
+#flash.go{animation:flashOut 1s ease-out forwards}
+@keyframes flashOut{0%{opacity:.95}100%{opacity:0}}
+
+/* ---------- finale ---------- */
+#wave{position:absolute;z-index:8;left:22%;top:58%;width:40px;height:40px;border-radius:50%;
+  pointer-events:none;opacity:0;
+  background:radial-gradient(circle,rgba(255,227,161,.8) 0%,rgba(65,242,167,.35) 45%,transparent 70%)}
+#wave.go{animation:waveGo 2.4s ease-out forwards}
+@keyframes waveGo{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(70)}}
+#finale{z-index:60;background:rgba(3,5,18,.18);backdrop-filter:none}
+#finale .card{max-width:600px;animation:riseUp .9s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 0 80px rgba(255,201,94,.3),0 24px 60px #000}
+@keyframes riseUp{from{transform:translateY(70px);opacity:0}to{transform:none;opacity:1}}
+#medal{width:92px;height:92px;margin:-62px auto 4px;display:block;filter:drop-shadow(0 0 24px rgba(255,201,94,.8))}
+@media (max-width:760px),(max-height:700px){#medal{margin:0 auto 4px;width:72px;height:72px}}
+#verdictChips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0 4px}
+.vchip{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--cc);
+  color:var(--cc);background:color-mix(in srgb,var(--cc) 12%,transparent)}
+#scoreGrid{display:flex;justify-content:center;gap:0;margin-top:14px;border:1px solid var(--line-soft);
+  border-radius:12px;overflow:hidden;flex-wrap:wrap;background:#0a102c}
+#scoreGrid .sc{flex:1;min-width:90px;padding:10px 6px;border-right:1px solid var(--line-soft)}
+#scoreGrid .sc:last-child{border-right:none}
+#scoreGrid .v{font-family:var(--disp);font-weight:900;font-size:22px;color:var(--gold)}
+#scoreGrid .k{font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+#finale .verdictTxt{font-family:var(--disp);font-size:16px;font-style:italic;color:var(--text);
+  line-height:1.55;margin-top:10px}
+#finale .verdictTxt b{color:var(--gold);font-style:normal}
+
+/* ---------- log ---------- */
+#log{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#090e2a,#070b22)}
+@media (max-width:760px){#log{border-left:none;border-top:1px solid var(--line-soft)}}
+#log header{padding:10px 16px 8px;border-bottom:1px solid var(--line-soft)}
+#log header .h{font-size:11px;font-weight:900;letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+#log header .s{font-size:10.5px;color:var(--faint);margin-top:2px}
+#logList{flex:1;overflow-y:auto;padding:10px 16px 16px;display:flex;flex-direction:column;gap:7px;
+  scroll-behavior:smooth}
+.lg{display:flex;gap:8px;font-size:12.5px;line-height:1.45;color:var(--text);
+  animation:lgIn .35s ease-out}
+@keyframes lgIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.lg .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:5px;background:var(--cc,#8d97cf);
+  box-shadow:0 0 8px var(--cc,#8d97cf)}
+.lg b{color:var(--cc,#cdd6ff)}
+.lg.judge{--cc:var(--amber)}
+.lg.adv{--cc:var(--emerald)}
+.lg.skp{--cc:var(--ember)}
+.lg.clk{--cc:#cdd6ff}
+.lg.sys{--cc:#5e67a3;color:var(--muted)}
+.lg.you{--cc:#ffffff;background:#141b4477;border-radius:8px;padding:4px 8px;margin:0 -8px}
+.lg .t{font-family:var(--mono);font-size:10px;color:var(--faint);flex:none;margin-top:3px;width:30px}
+
+/* ---------- misc ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01s !important;animation-iteration-count:1 !important;transition-duration:.15s !important}
+}
+</style>
+<div id="app">
+  <div id="topbar">
+    <div id="brand">✦ Glow Garden <span class="sub">a Cassation story</span></div>
+    <div id="counters">
+      <span>sources <b id="cSrc">0</b></span>
+      <span>spirits <b id="cSpr">0</b>/10</span>
+      <span>story <b id="cClk">0:00</b></span>
+    </div>
+    <div id="ctrls">
+      <button class="ctl" id="btnSpeed" title="playback speed">speed 1×</button>
+      <button class="ctl" id="btnReplay" title="replay the whole trial">↻ replay</button>
+      <button class="ctl" id="btnSkip" title="jump to the finale">skip to finale →</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="scene">
+      <div id="moon"></div>
+      <canvas id="fx"></canvas>
+      <div id="ground"></div>
+
+      <div id="tree">
+        <svg viewBox="0 0 400 520" aria-hidden="true">
+          <defs>
+            <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="7"/>
+            </filter>
+            <radialGradient id="cano" cx="50%" cy="42%" r="65%">
+              <stop offset="0%" stop-color="#2d4c97"/>
+              <stop offset="55%" stop-color="#1a2c68"/>
+              <stop offset="100%" stop-color="#121d4e"/>
+            </radialGradient>
+            <linearGradient id="trnk" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1b1a42"/>
+              <stop offset="50%" stop-color="#2d2a5e"/>
+              <stop offset="100%" stop-color="#17163a"/>
+            </linearGradient>
+            <radialGradient id="frt" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#fff7df"/>
+              <stop offset="45%" stop-color="#ffd98a"/>
+              <stop offset="100%" stop-color="#e8a93c"/>
+            </radialGradient>
+          </defs>
+
+          <!-- glow halo behind canopy -->
+          <g class="canopy">
+            <ellipse cx="200" cy="175" rx="165" ry="120" fill="#24409a" opacity=".35" filter="url(#soft)"/>
+            <!-- canopy clusters -->
+            <circle cx="120" cy="205" r="62" fill="url(#cano)"/>
+            <circle cx="282" cy="200" r="58" fill="url(#cano)"/>
+            <circle cx="160" cy="140" r="68" fill="url(#cano)"/>
+            <circle cx="248" cy="138" r="60" fill="url(#cano)"/>
+            <circle cx="200" cy="100" r="58" fill="url(#cano)"/>
+            <circle cx="200" cy="180" r="74" fill="url(#cano)"/>
+            <!-- inner glows -->
+            <circle cx="175" cy="150" r="30" fill="#41f2a7" opacity=".16" filter="url(#soft)"/>
+            <circle cx="245" cy="170" r="26" fill="#ffc95e" opacity=".14" filter="url(#soft)"/>
+            <circle cx="150" cy="200" r="22" fill="#6f7dff" opacity=".2" filter="url(#soft)"/>
+            <!-- lantern dots -->
+            <circle cx="140" cy="170" r="3.4" fill="#ffe3a1"/>
+            <circle cx="205" cy="120" r="3" fill="#9df5cd"/>
+            <circle cx="262" cy="160" r="3.2" fill="#ffe3a1"/>
+            <circle cx="178" cy="215" r="2.6" fill="#9df5cd"/>
+            <circle cx="236" cy="215" r="2.6" fill="#cdd6ff"/>
+            <circle cx="113" cy="215" r="2.4" fill="#ffe3a1"/>
+            <!-- rising motes -->
+            <circle class="mote" style="animation-delay:0s"  cx="160" cy="120" r="2.4" fill="#ffe3a1"/>
+            <circle class="mote" style="animation-delay:1.3s" cx="215" cy="105" r="2" fill="#9df5cd"/>
+            <circle class="mote" style="animation-delay:2.4s" cx="250" cy="125" r="2.2" fill="#cdd6ff"/>
+            <circle class="mote" style="animation-delay:3.4s" cx="185" cy="95" r="1.8" fill="#ffe3a1"/>
+          </g>
+
+          <!-- trunk -->
+          <path fill="url(#trnk)" d="M168 512 C176 448 172 400 176 352 C178 320 168 300 148 282
+            L170 290 C180 270 178 250 172 232 L196 262 C210 250 216 236 218 218
+            L226 258 C244 268 254 276 262 290 L232 292 C226 330 224 372 228 412 C232 458 236 486 240 512 Z"/>
+          <!-- roots -->
+          <path fill="#17163a" d="M140 514 C160 500 176 498 204 502 C232 498 250 500 268 514 Z"/>
+
+          <!-- face -->
+          <g class="face">
+            <g class="treeEye">
+              <ellipse cx="188" cy="356" rx="7" ry="8.5" fill="#0a0e26"/>
+              <circle cx="190" cy="353" r="2.2" fill="#ffe3a1"/>
+            </g>
+            <g class="treeEye">
+              <ellipse cx="220" cy="356" rx="7" ry="8.5" fill="#0a0e26"/>
+              <circle cx="222" cy="353" r="2.2" fill="#ffe3a1"/>
+            </g>
+            <path d="M196 382 Q204 389 212 382" stroke="#0a0e26" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+
+          <!-- fruit of truth -->
+          <g id="fruitG">
+            <line x1="236" y1="160" x2="236" y2="192" stroke="#8a6220" stroke-width="2.5"/>
+            <circle class="fruit-core" cx="236" cy="210" r="19" fill="url(#frt)"/>
+            <circle cx="236" cy="210" r="30" fill="#ffd98a" opacity=".35" filter="url(#soft)"/>
+            <path d="M236 191 q8 -8 16 -5 q-6 9 -16 5" fill="#41f2a7"/>
+          </g>
+        </svg>
+      </div>
+
+      <div id="buds"></div>
+      <div id="sprites"></div>
+
+      <div id="narration"></div>
+      <div id="flashTitle"><div class="t" id="flashTxt"></div></div>
+
+      <div id="approval" role="dialog" aria-label="Approve the plan">
+        <div class="txt"><b>Your turn, Keeper of the Garden!</b> 9 claim-buds sprouted.
+          One looks too fuzzy to try — <b>C8 “beats diamond?”</b>. Strike it &amp; send in the spirits?</div>
+        <button id="btnApprove">Strike C8 ✓ Approve</button>
+      </div>
+
+      <div id="wave"></div>
+      <div id="flash"></div>
+
+      <div class="overlay" id="startOv">
+        <div class="card">
+          <div class="eyebrow">Tonight in the Glow Garden · a research trial</div>
+          <h1>“How well does boron arsenide really carry heat — and which number can we trust?”</h1>
+          <p>The great Judge Tree will split the question into 9 glowing claim-buds.
+             Then <b style="color:var(--emerald)">5 emerald Advocates</b>, <b style="color:var(--ember)">4 ember Skeptics</b>
+             and <b style="color:#cdd6ff">Lumen the Clerk</b> fly out to put every claim on trial.
+             You rule what they can’t settle.</p>
+          <div id="startCast"></div>
+          <button class="bigbtn" id="btnStart">✦ Start the Trial</button>
+          <p style="font-size:11px;color:var(--faint)">about one minute · you’ll be called twice</p>
+        </div>
+      </div>
+
+      <div class="overlay hide" id="dispute">
+        <div class="beams" id="beams"></div>
+        <div class="inner">
+          <h2 id="dspTitle">⚡ The spirits disagree!</h2>
+          <div class="sub" id="dspSub">Two real papers, two different answers…</div>
+          <div class="vs">
+            <div class="srcCard L" id="juryA" role="button" tabindex="0">
+              <div class="who">● Juno the Advocate found</div>
+              <div class="num">~1,300 <small>W/mK</small></div>
+              <div class="q">“…the highest among all metals and semiconductors.”</div>
+              <div class="src">Kang et al. · Science · 2018</div>
+              <div class="ruled">★ HUMAN RULED</div>
+            </div>
+            <div class="srcCard R" id="juryB" role="button" tabindex="0">
+              <div class="who">● Rex the Skeptic found</div>
+              <div class="num">&gt;2,100 <small>W/mK</small></div>
+              <div class="q">“…purified-arsenic crystals — the old record was ~60% low.”</div>
+              <div class="src">Niyikiza et al. · Materials Today · 2025</div>
+              <div class="ruled">★ HUMAN RULED</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay hide" id="finale">
+        <div class="card">
+          <svg id="medal" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M34 8 L50 30 L66 8 L60 36 L40 36 Z" fill="#e05a33"/>
+            <path d="M30 10 L46 32 L54 32 L70 10 L62 40 L38 40 Z" fill="#ff8258"/>
+            <circle cx="50" cy="62" r="26" fill="#e8a93c"/>
+            <circle cx="50" cy="62" r="21" fill="#ffd98a"/>
+            <path d="M50 46 L54.5 56.5 L66 57.5 L57.5 65 L60 76 L50 70 L40 76 L42.5 65 L34 57.5 L45.5 56.5 Z" fill="#8a5a10"/>
+          </svg>
+          <div class="eyebrow">The fruit of truth · verdict</div>
+          <h1>Trial complete — the garden blooms!</h1>
+          <div id="verdictChips">
+            <span class="vchip" style="--cc:var(--emerald)">5 supported</span>
+            <span class="vchip" style="--cc:var(--ember)">2 challenged</span>
+            <span class="vchip" style="--cc:var(--amber)">1 ruled by YOU</span>
+            <span class="vchip" style="--cc:#8d97cf">1 struck</span>
+          </div>
+          <div class="verdictTxt">Boron arsenide really is a super heat-carrier — but the famous record was too low.
+            The newest purified crystals reach <b>&gt;2,100&nbsp;W/mK</b>, above the old theory ceiling of ~1,400.
+            You ruled for the <b>2025 measurement</b> — and now theory must catch up.</div>
+          <div id="scoreGrid">
+            <div class="sc"><div class="v" id="scSrc">14</div><div class="k">sources found</div></div>
+            <div class="sc"><div class="v">10</div><div class="k">spirit agents</div></div>
+            <div class="sc"><div class="v">9</div><div class="k">claims tried</div></div>
+            <div class="sc"><div class="v">2</div><div class="k">your rulings</div></div>
+            <div class="sc"><div class="v" id="scTime">0:58</div><div class="k">story time</div></div>
+          </div>
+          <button class="bigbtn" id="btnReplay2">↻ Run the trial again</button>
+        </div>
+      </div>
+    </div>
+
+    <aside id="log">
+      <header>
+        <div class="h">✦ Court Record</div>
+        <div class="s">every spirit reports here, written in light</div>
+      </header>
+      <div id="logList" aria-live="polite"></div>
+    </aside>
+  </div>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const scene=$("scene"), fx=$("fx"), ctx=fx.getContext("2d");
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,2);
+  W=scene.clientWidth; H=scene.clientHeight;
+  fx.width=W*DPR; fx.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener("resize",resize); resize();
+
+/* ---------------- data ---------------- */
+const CLAIMS=[
+ {id:"C1",x:.085,y:.50,lbl:"the 2200 dream", log:"<b>Claim C1</b> sprouted: in 2013, theory said BAs could carry heat at ~2,200 W/mK — nearly like diamond."},
+ {id:"C2",x:.115,y:.72,lbl:"first crystals ~190", log:"<b>Claim C2</b> sprouted: the first real crystals (2015) only managed ~190."},
+ {id:"C3",x:.26,y:.86,lbl:"blame the defects", log:"<b>Claim C3</b> sprouted: tiny crystal defects caused those low numbers."},
+ {id:"C4",x:.40,y:.90,lbl:"the 1400 ceiling", log:"<b>Claim C4</b> sprouted: a 2017 re-calculation capped BAs at ~1,400."},
+ {id:"C5",x:.54,y:.89,lbl:"the 2018 trio", log:"<b>Claim C5</b> sprouted: three 2018 Science papers measured ~900–1,300."},
+ {id:"C6",x:.67,y:.83,lbl:"record ~1300?", log:"<b>Claim C6</b> sprouted: the record number to trust today is ~1,300."},
+ {id:"C7",x:.78,y:.72,lbl:"isotope +40%?", log:"<b>Claim C7</b> sprouted: purer isotopes should add ~40% more."},
+ {id:"C8",x:.87,y:.57,lbl:"beats diamond?", log:"<b>Claim C8</b> sprouted: “BAs beats diamond.” Hmm — beats <i>which</i> diamond?"},
+ {id:"C9",x:.915,y:.38,lbl:"chip-friendly", log:"<b>Claim C9</b> sprouted: BAs is a semiconductor, so it can sit right on chips."},
+];
+const SPRITES=[
+ {n:"Ada", r:"adv", bud:"C1"}, {n:"Fern",r:"adv", bud:"C2"},
+ {n:"Pyra",r:"skp", bud:"C3"}, {n:"Ash", r:"skp", bud:"C4"},
+ {n:"Ivy", r:"adv", bud:"C5"}, {n:"Juno",r:"adv", bud:"C6", off:-0.035},
+ {n:"Rex", r:"skp", bud:"C6", off:0.035}, {n:"Cinder",r:"skp",bud:"C7"},
+ {n:"Moss",r:"adv", bud:"C9"}, {n:"Lumen",r:"clk", bud:"C5", off:0.05, hover:-0.16},
+];
+const ROLE={adv:"Advocate",skp:"Skeptic",clk:"Clerk"};
+
+/* ---------------- build buds ---------------- */
+const budEl={};
+function buildBuds(){
+  const host=$("buds"); host.innerHTML="";
+  for(const c of CLAIMS){
+    const d=document.createElement("div");
+    d.className="bud"; d.id="bud-"+c.id;
+    d.style.setProperty("--x",(c.x*100)+"%");
+    d.style.setProperty("--y",(c.y*100)+"%");
+    d.innerHTML=`
+    <svg viewBox="0 0 80 100" aria-hidden="true">
+      <path d="M40 96 C40 80 38 72 40 60" stroke="#3b7d5e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M40 80 q-14 -2 -18 -14 q14 0 18 10" fill="#2e6a50"/>
+      <g class="head">
+        <g class="closed">
+          <path class="shut" stroke-width="2" d="M40 18 C52 26 56 40 40 56 C24 40 28 26 40 18 Z"/>
+          <path d="M40 24 C40 34 40 42 40 50" stroke="#555fa8" stroke-width="1.5" fill="none"/>
+        </g>
+        <g class="open">
+          <ellipse class="petal" cx="40" cy="22" rx="9" ry="14"/>
+          <ellipse class="petal" cx="24" cy="34" rx="9" ry="14" transform="rotate(-65 24 34)"/>
+          <ellipse class="petal" cx="56" cy="34" rx="9" ry="14" transform="rotate(65 56 34)"/>
+          <ellipse class="petal" cx="30" cy="50" rx="9" ry="13" transform="rotate(-140 30 50)"/>
+          <ellipse class="petal" cx="50" cy="50" rx="9" ry="13" transform="rotate(140 50 50)"/>
+          <circle class="core" cx="40" cy="37" r="8"/>
+        </g>
+      </g>
+    </svg>
+    <div class="chip">${c.id}</div>
+    <div class="lbl">${c.lbl}</div>
+    <div class="stamp">STRUCK</div>`;
+    host.appendChild(d); budEl[c.id]=d;
+  }
+}
+function budState(id,st){
+  const d=budEl[id];
+  d.className="bud in"+(st?" state-"+st:"");
+}
+function budPoint(id){ const c=CLAIMS.find(c=>c.id===id); return {x:c.x*W, y:c.y*H}; }
+
+/* ---------------- build sprites ---------------- */
+const sprites=[];
+function buildSprites(){
+  const host=$("sprites"); host.innerHTML=""; sprites.length=0;
+  for(const s of SPRITES){
+    const d=document.createElement("div");
+    d.className="sprite "+s.r;
+    d.innerHTML=`
+      <div class="halo"></div>
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <ellipse class="wing wingL" cx="22" cy="20" rx="7" ry="12"/>
+        <ellipse class="wing" cx="42" cy="20" rx="7" ry="12"/>
+        <path class="bod" d="M32 16 C45 16 47 32 32 52 C17 32 19 16 32 16 Z"/>
+        <circle class="eyeW" cx="26.5" cy="29" r="3.6"/>
+        <circle class="eyeW" cx="37.5" cy="29" r="3.6"/>
+        <circle class="pup" cx="27" cy="29.5" r="1.9"/>
+        <circle class="pup" cx="38" cy="29.5" r="1.9"/>
+        <rect class="lid" x="21" y="24" width="22" height="10" rx="4" style="animation-delay:${(Math.random()*3).toFixed(1)}s"/>
+        <path class="mouth" d="M29 37 Q32 40 35 37"/>
+      </svg>
+      <div class="tag">${s.n}</div>`;
+    host.appendChild(d);
+    const c=CLAIMS.find(c=>c.id===s.bud);
+    sprites.push({...s, el:d, x:0, y:0, mode:"hidden", t0:0, dur:0, path:null, ph:Math.random()*6.28,
+      tx:(c.x+(s.off||0)), ty:(c.y+(s.hover||-0.12))});
+  }
+}
+function canopyPoint(){ // canopy center in scene px
+  const t=$("tree").getBoundingClientRect(), sc=scene.getBoundingClientRect();
+  return {x:t.left-sc.left+t.width*0.5, y:t.top-sc.top+t.height*0.33};
+}
+
+/* Catmull-Rom through points */
+function crom(pts,t){
+  const n=pts.length-1, f=Math.min(Math.max(t,0),0.9999)*n, i=Math.floor(f), u=f-i;
+  const p0=pts[Math.max(i-1,0)], p1=pts[i], p2=pts[Math.min(i+1,n)], p3=pts[Math.min(i+2,n)];
+  const q=(a,b,c,d)=>0.5*((2*b)+(-a+c)*u+(2*a-5*b+4*c-d)*u*u+(-a+3*b-3*c+d)*u*u*u);
+  return {x:q(p0.x,p1.x,p2.x,p3.x), y:q(p0.y,p1.y,p2.y,p3.y)};
+}
+function launchSprite(sp,i){
+  const c=canopyPoint(), tx=sp.tx*W, ty=sp.ty*H;
+  const dir=(i%2?1:-1), a0=(i/10)*Math.PI*2;
+  const pts=[{x:c.x,y:c.y}];
+  for(let k=1;k<=3;k++){ // spiral out of the canopy
+    const r=14+k*26, a=a0+dir*k*1.9;
+    pts.push({x:c.x+Math.cos(a)*r, y:c.y+Math.sin(a)*r*0.75-k*8});
+  }
+  pts.push({x:(pts[3].x+tx)/2, y:Math.min(pts[3].y,ty)-H*0.16}); // high arc
+  pts.push({x:tx,y:ty});
+  sp.path=pts; sp.mode="fly"; sp.t0=sim.t; sp.dur=REDUCED?0.01:3.0;
+  sp.el.classList.add("on");
+  burst(c.x,c.y,COLORS[sp.r],10,90);
+  spiritCount++; $("cSpr").textContent=spiritCount;
+}
+function placeSprite(sp){ // instant placement (skip/reduced)
+  sp.mode="work"; sp.el.classList.add("on","working");
+  sp.x=sp.tx*W; sp.y=sp.ty*H;
+  spiritCount=Math.min(10,Math.max(spiritCount,sprites.filter(s=>s.mode!=="hidden").length));
+  $("cSpr").textContent=spiritCount;
+}
+function drawSprites(dt){
+  for(const sp of sprites){
+    if(sp.mode==="hidden") continue;
+    if(sp.mode==="fly"){
+      const u=Math.min((sim.t-sp.t0)/sp.dur,1), e=1-Math.pow(1-u,2.2);
+      const p=crom(sp.path,e); sp.x=p.x; sp.y=p.y;
+      if(!REDUCED){ trail(sp.x,sp.y+6,sp.r); trail(sp.x,sp.y+6,sp.r,0.7); }
+      if(u>=1){ sp.mode="work"; sp.el.classList.add("working"); }
+    }else if(sp.mode==="work"){
+      sp.ph+=dt*2.2;
+      sp.x=sp.tx*W+Math.sin(sp.ph)*9;
+      sp.y=sp.ty*H+Math.sin(sp.ph*0.7)*6;
+      if(!REDUCED && Math.random()<0.05) trail(sp.x,sp.y+8,sp.r,0.5);
+    }else if(sp.mode==="party"){
+      sp.ph+=dt*1.6;
+      sp.x=W*0.45+Math.cos(sp.ph+sp.party)*W*0.30;
+      sp.y=H*0.40+Math.sin(sp.ph+sp.party)*H*0.22;
+      if(!REDUCED && Math.random()<0.2) trail(sp.x,sp.y+6,sp.r,0.7);
+    }
+    sp.el.style.transform=`translate(${sp.x}px,${sp.y}px)`;
+  }
+}
+
+/* ---------------- particles ---------------- */
+const parts=[];
+const COLORS={adv:"65,242,167", skp:"255,130,88", clk:"205,214,255", amb:"255,201,94", wht:"240,243,255"};
+function trail(x,y,role,s=1){
+  parts.push({x,y,vx:(Math.random()-.5)*14,vy:(Math.random()-.5)*10+8,life:1,max:.9+Math.random()*.5,
+    r:(2.2+Math.random()*2)*s,c:COLORS[role]||COLORS.wht,ty:"dot"});
+}
+function burst(x,y,c,n=26,sp=140){
+  n=REDUCED?Math.min(n,6):n;
+  for(let i=0;i<n;i++){const a=Math.random()*6.28,v=sp*(0.3+Math.random()*0.7);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-30,life:1,max:1+Math.random()*.8,r:2+Math.random()*2.6,c,ty:"spark"});}
+}
+function petals(n=50){
+  n=REDUCED?8:n;
+  for(let i=0;i<n;i++){
+    const c=[COLORS.adv,COLORS.amb,COLORS.wht][i%3];
+    parts.push({x:Math.random()*W,y:-20-Math.random()*H*.5,vx:10+Math.random()*25,vy:26+Math.random()*30,
+      life:1,max:6+Math.random()*4,r:3.5+Math.random()*3,c,ty:"petal",ph:Math.random()*6.28});
+  }
+}
+const stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*.72,r:Math.random()*1.3+.4,ph:Math.random()*6.28}));
+let fireflyAmbient=Array.from({length:REDUCED?4:12},()=>({x:Math.random(),y:.3+Math.random()*.55,ph:Math.random()*6.28,sp:.2+Math.random()*.4}));
+function drawFX(dt,now){
+  ctx.clearRect(0,0,W,H);
+  // stars
+  ctx.fillStyle="#cdd6ff";
+  for(const s of stars){ ctx.globalAlpha=.35+.35*Math.sin(now*.0012+s.ph);
+    ctx.fillRect(s.x*W,s.y*H,s.r,s.r); }
+  // ambient fireflies
+  for(const f of fireflyAmbient){
+    f.ph+=dt*f.sp; const x=(f.x+Math.sin(f.ph*.6)*.02)*W, y=(f.y+Math.sin(f.ph)*.03)*H;
+    const a=.25+.3*Math.sin(f.ph*2);
+    ctx.globalAlpha=Math.max(a,0); ctx.fillStyle="rgb(255,227,161)";
+    ctx.beginPath(); ctx.arc(x,y,1.8,0,6.28); ctx.fill();
+  }
+  // particles
+  ctx.globalCompositeOperation="lighter";
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i]; p.life-=dt/p.max;
+    if(p.life<=0 || p.y>H+30){ parts.splice(i,1); continue; }
+    if(p.ty==="spark"){ p.vy+=90*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; }
+    else if(p.ty==="petal"){ p.ph+=dt*3; p.x+=(p.vx+Math.sin(p.ph)*30)*dt; p.y+=p.vy*dt; }
+    else { p.x+=p.vx*dt; p.y+=p.vy*dt; }
+    ctx.globalAlpha=Math.max(p.life,0)*.9;
+    ctx.fillStyle=`rgb(${p.c})`;
+    if(p.ty==="petal"){
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(Math.sin(p.ph)*.8);
+      ctx.beginPath(); ctx.ellipse(0,0,p.r,p.r*.45,0,0,6.28); ctx.fill(); ctx.restore();
+    }else{
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*p.life,0,6.28); ctx.fill();
+    }
+  }
+  ctx.globalCompositeOperation="source-over"; ctx.globalAlpha=1;
+}
+
+/* ---------------- log & narration ---------------- */
+const logList=$("logList");
+let srcCount=0, spiritCount=0;
+function log(role,html,stamp){
+  const d=document.createElement("div");
+  d.className="lg "+role;
+  d.innerHTML=`<span class="t">${fmt(sim.t)}</span><span class="dot"></span><span>${html}</span>`;
+  logList.appendChild(d);
+  while(logList.children.length>80) logList.firstChild.remove();
+  logList.scrollTop=logList.scrollHeight;
+}
+function narrate(txt){ $("narration").textContent=txt; }
+function addSource(n=1){ srcCount+=n; $("cSrc").textContent=srcCount; }
+function fmt(t){ const m=Math.floor(t/60),s=Math.floor(t%60); return m+":"+String(s).padStart(2,"0"); }
+</script>
+<script>
+"use strict";
+/* ---------------- simulation clock ---------------- */
+const sim={t:0,speed:1,playing:false,idx:0,waiting:null,waitT:0};
+let started=false, ruledChoice=null;
+const FINALE_T=45.5;
+
+const EV=[];
+function at(t,run){ EV.push({t,run}); }
+
+/* ---- beat 2: PLAN ---- */
+at(0.3,()=>{ $("tree").classList.add("thinking"); narrate("The great Judge Tree wakes…");
+  log("judge","<b>Judge Tree</b> reads tonight’s question aloud to the garden."); });
+at(1.3,()=>log("judge","<b>Judge Tree</b>: “I will split it into little claims — each becomes a flower bud.”"));
+CLAIMS.forEach((c,i)=>at(2.0+i*0.85,(inst)=>{
+  budEl[c.id].classList.add("in","pop");
+  if(!inst){ const p=budPoint(c.id); burst(p.x,p.y-30,COLORS.amb,8,60); }
+  log("sys",c.log);
+}));
+at(9.9,()=>narrate("Nine claim-buds glow in the dark. The plan is ready."));
+at(10.6,(inst)=>{
+  if(!inst){ $("approval").classList.add("show"); narrate("Your turn! Approve the Judge’s plan."); }
+  sim.waiting="approval"; sim.waitT=0;
+});
+/* ---- beat 3: strike + approve ---- */
+at(10.9,(inst)=>{ budState("C8","struck");
+  if(!inst){ const p=budPoint("C8"); burst(p.x,p.y-30,"160,160,190",14,90); }
+  log("you","<b>YOU</b> struck C8 — “beats diamond?” is too fuzzy to try. 8 claims go to trial."); });
+at(11.6,()=>log("judge","<b>Judge Tree</b>: “So ruled. Empanel the spirits!”"));
+
+/* ---- beat 4: THE SPIN-OFF ---- */
+at(12.0,(inst)=>{
+  $("tree").classList.remove("thinking");
+  if(!inst){
+    narrate("");
+    $("flashTxt").textContent="✦ Ten spirits awaken ✦";
+    $("flashTitle").classList.add("show");
+    const c=canopyPoint();
+    burst(c.x,c.y,COLORS.amb,40,200); burst(c.x,c.y,COLORS.wht,30,150);
+  }
+});
+at(14.4,()=>$("flashTitle").classList.remove("show"));
+SPRITES.forEach((s,i)=>at(12.5+i*0.42,(inst)=>{
+  const sp=sprites[i];
+  if(inst||REDUCED) placeSprite(sp); else launchSprite(sp,i);
+  log(s.r,`✦ <b>${s.n}</b> the ${ROLE[s.r]} swirls out of the tree → bud <b>${s.bud}</b>!`);
+}));
+at(17.6,()=>narrate("The spirits search the world’s papers, live…"));
+
+/* ---- beat 5: WORK ---- */
+function evidence(t,budId,state,role,html,src,inst0){
+  at(t,(inst)=>{
+    if(state) budState(budId,state);
+    if(src) addSource(src);
+    if(!inst && state && state!=="running"){
+      const p=budPoint(budId);
+      burst(p.x,p.y-34,state==="green"?COLORS.adv:state==="red"?COLORS.skp:COLORS.amb,14,90);
+    }
+    log(role,html);
+  });
+}
+evidence(18.6,"C1","running","adv","<b>Ada</b> dives into the archives for C1…");
+evidence(19.8,"C1","green","adv","<b>Ada</b> found the 2013 prediction: ~2,200 W/mK — “a competitor for diamond”! ✔ <i>(Phys. Rev. Lett. 2013)</i>",2);
+evidence(21.2,"C2","green","adv","<b>Fern</b> found the 2015 paper: the first crystals only reached ~190. True — the dream looked dead. ✔",1);
+evidence(22.6,"C3","running","skp","<b>Pyra</b> attacks C3: “Prove the defects did it!”");
+evidence(24.0,"C3","green","skp","<b>Pyra</b> yields — defect studies hold (As–B antisites). C3 stands. ✔",2);
+evidence(25.4,"C5","green","adv","<b>Ivy</b> found the 2018 Science trio: three labs, ~900–1,300 W/mK. The dream returns! ✔",3);
+evidence(26.8,"C9","green","adv","<b>Moss</b>: BAs is a real semiconductor — it could cool chips from the inside. ✔",1);
+evidence(28.2,"C7","running","skp","<b>Cinder</b> sniffs at C7: “+40% from pure isotopes? Really?”");
+evidence(29.6,"C7","red","skp","<b>Cinder</b>: measured boost is only 8–13%! C7 wilts. ✘ <i>(Adv. Science 2025)</i>",2);
+evidence(31.0,"C4","running","skp","<b>Ash</b> circles C4, the famous 1,400 ceiling…");
+evidence(32.4,"C4","red","skp","<b>Ash</b>: a 2025 crystal measured ABOVE the ceiling — it cracks! ✘",1);
+evidence(33.8,"C6","green","adv","<b>Juno</b>: the record ~1,300 (Kang, Science 2018) checks out. ✔",1);
+evidence(35.2,"C6","running","skp","<b>Rex</b> screeches: “No! Purified crystals hit <b>&gt;2,100</b> in 2025!” <i>(Materials Today)</i>",1);
+at(36.6,()=>log("clk","<b>Lumen</b> the Clerk floats over and lays the two quotes side by side…"));
+at(37.8,(inst)=>{ budState("C6","amber"); budEl["C6"].classList.add("pulsing");
+  addSource(1);
+  log("clk","<b>Lumen</b>: a second 2025 technique also reads &gt;2,000… yet 1,300 was “confirmed”. ⚡ <b>CONTESTED!</b>"); });
+at(38.6,()=>narrate("One flower cannot decide…"));
+
+/* ---- beat 6: DISPUTE ---- */
+at(39.4,(inst)=>{
+  log("judge","<b>Judge Tree</b>: “THE COURT CALLS THE JURY.”");
+  if(inst) return;
+  $("flash").classList.add("go");
+  $("beams").innerHTML='<div class="beam beamL"></div><div class="beam beamR"></div>';
+  $("dispute").classList.remove("hide");
+  setTimeout(()=>burst(W/2,H/2,COLORS.amb,40,220),REDUCED?0:850);
+});
+/* ---- beat 7: JURY ---- */
+at(42.4,(inst)=>{
+  sim.waiting="jury"; sim.waitT=0;
+  if(inst) return;
+  $("dispute").classList.add("juryMode");
+  $("dspTitle").textContent="⚖ You are the Jury";
+  $("dspSub").textContent="Tap the number you trust. Your ruling is stamped forever.";
+  narrate("Your turn: tap a card to rule.");
+});
+at(43.2,(inst)=>{
+  $("dispute").classList.add("hide");
+  budState("C6","amber");
+  $("tree").classList.add("verdicting");
+  log("judge","<b>Judge Tree</b> accepts your ruling and begins weaving the verdict…");
+  narrate("The Judge Tree weaves everything into one answer…");
+});
+
+/* ---- beat 8: REWARD ---- */
+at(FINALE_T,(inst)=>{
+  $("wave").classList.add("go");
+  for(const c of CLAIMS){ if(c.id!=="C8") budEl[c.id].classList.add("finale"); }
+  sprites.forEach((sp,i)=>{ if(sp.mode!=="hidden"){ sp.mode="party"; sp.party=i/10*6.28; } });
+  petals(60);
+  narrate("The whole garden blooms at once!");
+  log("judge","<b>Judge Tree</b>: “The garden has spoken. Let it BLOOM!”");
+});
+at(FINALE_T+0.8,(inst)=>{ $("fruitG").classList.add("show");
+  if(!inst){ const c=canopyPoint(); burst(c.x+30,c.y+40,COLORS.amb,30,120); }
+  narrate("The Fruit of Truth ripens…"); });
+at(FINALE_T+1.3,()=>{ if(!REDUCED){ burst(W*0.25,H*0.25,COLORS.adv,30,180); burst(W*0.75,H*0.3,COLORS.amb,30,180);} });
+at(FINALE_T+1.8,()=>{ if(!REDUCED){ burst(W*0.5,H*0.2,COLORS.wht,36,200); petals(30);} });
+let partyIv=null;
+at(FINALE_T+3.4,()=>{
+  $("scTime").textContent=fmt(sim.t);
+  $("scSrc").textContent=srcCount;
+  $("finale").classList.remove("hide");
+  log("you","🏆 <b>TRIAL COMPLETE</b> — verdict delivered, with sources.");
+  if(!partyIv && !REDUCED) partyIv=setInterval(()=>{
+    petals(10);
+    burst(Math.random()*W, H*0.15+Math.random()*H*0.3,
+      [COLORS.adv,COLORS.amb,COLORS.wht][Math.floor(Math.random()*3)], 18, 150);
+  },3800);
+});
+
+EV.sort((a,b)=>a.t-b.t);
+
+/* ---------------- waits ---------------- */
+function doApprove(){
+  if(sim.waiting!=="approval") return;
+  sim.waiting=null; $("approval").classList.remove("show");
+}
+function rule(choice){
+  if(sim.waiting!=="jury") return;
+  ruledChoice=choice; sim.waiting=null;
+  const A=$("juryA"),B=$("juryB");
+  const win=choice==="B"?B:A, lose=choice==="B"?A:B;
+  win.classList.add("chosen"); lose.classList.add("dimmed");
+  if(!REDUCED){ const r=win.getBoundingClientRect(), s=scene.getBoundingClientRect();
+    burst(r.left-s.left+r.width/2, r.top-s.top+r.height/2, COLORS.amb, 30, 160); }
+  log("you", choice==="B"
+    ? "<b>YOU</b> ruled for the 2025 purified-crystal measurement — stamped <b>HUMAN RULED</b>, forever."
+    : "<b>YOU</b> ruled for the 2018 record — stamped <b>HUMAN RULED</b>, forever.");
+}
+function checkAutoWait(){
+  if(sim.waiting==="approval" && sim.waitT>2.6) doApprove();
+  else if(sim.waiting==="jury" && sim.waitT>6) rule("B");
+}
+
+/* ---------------- controls ---------------- */
+function startTrial(){ started=true; $("startOv").classList.add("hide"); sim.playing=true; }
+function reset(){
+  sim.t=0; sim.idx=0; sim.waiting=null; sim.waitT=0; sim.playing=false;
+  started=false; ruledChoice=null; parts.length=0;
+  if(partyIv){ clearInterval(partyIv); partyIv=null; }
+  srcCount=0; spiritCount=0; $("cSrc").textContent=0; $("cSpr").textContent=0; $("cClk").textContent="0:00";
+  buildBuds(); buildSprites();
+  logList.innerHTML=""; narrate("");
+  $("tree").classList.remove("thinking","verdicting");
+  $("fruitG").classList.remove("show");
+  $("wave").classList.remove("go");
+  $("flash").classList.remove("go");
+  $("flashTitle").classList.remove("show");
+  $("approval").classList.remove("show");
+  const d=$("dispute"); d.classList.add("hide"); d.classList.remove("juryMode");
+  $("dspTitle").textContent="⚡ The spirits disagree!";
+  $("dspSub").textContent="Two real papers, two different answers…";
+  $("juryA").classList.remove("chosen","dimmed");
+  $("juryB").classList.remove("chosen","dimmed");
+  $("finale").classList.add("hide");
+}
+function skipToFinale(){
+  if(!started) startTrial();
+  if(sim.idx>=EV.length) return;
+  $("flashTitle").classList.remove("show");
+  $("approval").classList.remove("show");
+  $("dispute").classList.add("hide");
+  while(sim.idx<EV.length && EV[sim.idx].t<FINALE_T){
+    const e=EV[sim.idx++]; sim.t=e.t; e.run(true);
+    if(sim.waiting==="approval"){ sim.waiting=null; }
+    if(sim.waiting==="jury"){ sim.waiting=null; ruledChoice="B";
+      log("you","<b>YOU</b> ruled for the 2025 measurement — stamped <b>HUMAN RULED</b>."); }
+  }
+  sim.t=FINALE_T;
+}
+$("btnStart").addEventListener("click",startTrial);
+$("btnApprove").addEventListener("click",doApprove);
+$("btnSkip").addEventListener("click",skipToFinale);
+$("btnReplay").addEventListener("click",()=>{ reset(); startTrial(); });
+$("btnReplay2").addEventListener("click",()=>{ reset(); startTrial(); });
+const SPEEDS=[1,2,4];
+$("btnSpeed").addEventListener("click",e=>{
+  const i=(SPEEDS.indexOf(sim.speed)+1)%SPEEDS.length;
+  sim.speed=SPEEDS[i]; e.currentTarget.textContent="speed "+sim.speed+"×";
+});
+for(const [id,ch] of [["juryA","A"],["juryB","B"]]){
+  const el=$(id);
+  el.addEventListener("click",()=>rule(ch));
+  el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); rule(ch);} });
+}
+
+/* ---------------- main loop ---------------- */
+buildBuds(); buildSprites();
+$("startCast").innerHTML=SPRITES.map(s=>
+  `<span class="cd" title="${s.n} the ${ROLE[s.r]}" style="color:${
+    s.r==="adv"?"var(--emerald)":s.r==="skp"?"var(--ember)":"#cdd6ff"};background:currentColor"></span>`).join("");
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.1); last=now;
+  if(sim.playing){
+    if(sim.waiting){ sim.waitT+=dt*sim.speed; checkAutoWait(); }
+    if(!sim.waiting){
+      sim.t+=dt*sim.speed;
+      while(sim.idx<EV.length && EV[sim.idx].t<=sim.t && !sim.waiting) EV[sim.idx++].run(false);
+    }
+    $("cClk").textContent=fmt(sim.t);
+  }
+  drawSprites(dt*sim.speed);
+  drawFX(dt,now);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>

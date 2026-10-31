@@ -1,0 +1,891 @@
+<title>Rocket Cassation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+/* ============ ROCKET CASSATION — mission-control mockup (scripted sim, no backend) ============ */
+:root{
+  color-scheme: dark;
+  --bg:#060a1e; --bg2:#0a1030; --panel:#0c1232; --raised:#131a42; --line:#222c5e;
+  --text:#eaf0ff; --muted:#93a0cf;
+  --cyan:#54d8ff; --green:#45f087; --red:#ff5d6e; --gold:#ffc94f; --amber:#ffb347;
+  --grey:#5c6690;
+  --disp:'Fredoka',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'Cascadia Mono',Consolas,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--disp);font-size:15px;line-height:1.45;
+  background-image:radial-gradient(1200px 700px at 70% -10%, #11205a66, transparent 60%),
+                   radial-gradient(900px 600px at 10% 110%, #2a0f4d44, transparent 60%);}
+button{font-family:var(--disp)}
+button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:2px;border-radius:10px}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:10px 24px}
+
+/* ---------- header ---------- */
+header.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 4px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:21px;letter-spacing:.5px}
+.logo svg{width:26px;height:26px;transform:rotate(-20deg)}
+.chip{font-size:11px;font-weight:600;letter-spacing:.12em;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--cyan);background:#0c1440}
+.spacer{flex:1}
+.counters{display:flex;gap:14px;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.counters b{color:var(--text);font-weight:600}
+.ctrls{display:flex;align-items:center;gap:8px}
+.speed{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.speed button{background:transparent;border:0;color:var(--muted);padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
+.speed button.on{background:var(--cyan);color:#06234a}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--raised)}
+.btn.link{border:0;background:none;color:var(--muted);text-decoration:underline dotted;padding:6px 4px}
+.btn.link:hover{color:var(--cyan)}
+
+/* ---------- main grid ---------- */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:14px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+
+/* ---------- stage ---------- */
+#stage{position:relative;min-height:clamp(470px,64vh,660px);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,#070c24 0%,#0a1030 55%,#140f38 100%)}
+#stars,#fx{position:absolute;inset:0;width:100%;height:100%}
+#stars{z-index:0}#fx{z-index:2;pointer-events:none}
+.actor{position:absolute;z-index:3;transform:translate(-50%,-50%)}
+
+/* planets */
+.planet{position:absolute;z-index:6;transform:translate(-50%,-50%) scale(0);transition:transform .45s cubic-bezier(.34,1.56,.5,1);text-align:center;pointer-events:none}
+.planet.pop{transform:translate(-50%,-50%) scale(1)}
+.planet .ball{width:var(--d,52px);height:var(--d,52px);border-radius:50%;margin:0 auto;position:relative;
+  box-shadow:0 0 0 3px #ffffff14, 0 0 18px 2px #00000055 inset, 0 0 14px var(--glow,transparent)}
+.planet .ball::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 32% 28%, #ffffff33, transparent 45%)}
+.planet .tag{margin-top:5px;display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;background:#070c24d9;border:1px solid var(--line);
+  border-radius:8px;padding:2px 7px;color:var(--muted);max-width:120px}
+.planet .tag b{color:var(--text)}
+.planet[data-state=running] .ball{--glow:var(--cyan)}
+.planet[data-state=supported] .ball{--glow:var(--green);box-shadow:0 0 0 3px #45f08766,0 0 22px var(--green)}
+.planet[data-state=supported] .tag{border-color:#45f08788;color:#bff5d4}
+.planet[data-state=challenged] .ball{--glow:var(--red);box-shadow:0 0 0 3px #ff5d6e66,0 0 22px var(--red)}
+.planet[data-state=challenged] .tag{border-color:#ff5d6e88;color:#ffc9ce}
+.planet[data-state=contested] .ball{animation:strobe 1s infinite;box-shadow:0 0 0 4px #ffb34788,0 0 30px var(--amber)}
+.planet[data-state=contested] .tag{border-color:var(--amber);color:#ffe2b8}
+.planet[data-state=ruled] .ball{box-shadow:0 0 0 4px #ffc94faa,0 0 30px var(--gold)}
+.planet[data-state=ruled] .tag{border-color:var(--gold);color:#ffe9b5}
+.planet.struck{filter:grayscale(1) brightness(.55)}
+.planet.struck .x{position:absolute;inset:-6px;z-index:4;display:flex;align-items:center;justify-content:center;
+  color:var(--red);font-weight:700;font-size:13px;letter-spacing:.1em;transform:rotate(-14deg);text-shadow:0 0 8px #000}
+@keyframes strobe{0%,100%{filter:brightness(1)}50%{filter:brightness(1.6)}}
+
+/* mothership */
+#ship{z-index:4;text-align:center}
+#ship .label{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:600;margin-top:2px;text-shadow:0 0 8px #000}
+#ship .beaconlight{animation:beacon 2.2s infinite}
+#ship.think .beaconlight{animation:beacon .5s infinite}
+#ship .dots{opacity:0;transition:opacity .3s}
+#ship.think .dots{opacity:1}
+#ship.think .dots circle{animation:bob 1s infinite}
+#ship.think .dots circle:nth-child(2){animation-delay:.18s}
+#ship.think .dots circle:nth-child(3){animation-delay:.36s}
+@keyframes beacon{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* rockets */
+.rocket{position:absolute;z-index:5;width:40px;transform:translate(-50%,-50%);will-change:transform}
+.rocket svg{width:100%;display:block;overflow:visible}
+.rocket .nametag{position:absolute;left:50%;top:103%;transform:translateX(-50%);font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  padding:1px 7px;border-radius:999px;background:#070c24e0;border:1.5px solid var(--hull);color:var(--text);text-shadow:0 0 6px #000}
+.rocket .eye{animation:blink 4.2s infinite}
+.rocket:nth-child(odd) .eye{animation-delay:1.3s}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+.rocket .flame path{transform-origin:30px 66px;animation:flick .18s infinite alternate}
+@keyframes flick{from{transform:scaleY(.85) scaleX(.9)}to{transform:scaleY(1.12) scaleX(1.05)}}
+.rocket.idleflame .flame{opacity:.35}
+.rocket.yay .win{filter:drop-shadow(0 0 6px #fff)}
+.rocket.yay svg{animation:yaybounce .6s}
+@keyframes yaybounce{0%{transform:scale(1)}30%{transform:scale(1.35,.75)}60%{transform:scale(.85,1.25)}100%{transform:scale(1)}}
+@media (max-width:620px){.rocket{width:32px}.planet .tag{max-width:86px;font-size:10px}.planet .tag .nk{display:none}}
+
+/* stage shake + alarm */
+#stage.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translate(3px,-2px)}50%{transform:translate(-3px,2px)}75%{transform:translate(2px,2px)}}
+body.alarm #alarmvig{opacity:1}
+#alarmvig{pointer-events:none;position:fixed;inset:0;z-index:25;opacity:0;transition:opacity .3s;
+  box-shadow:inset 0 0 120px 30px #ff2d4477;animation:alarmpulse 0.9s infinite}
+@keyframes alarmpulse{0%,100%{box-shadow:inset 0 0 90px 20px #ff2d4455}50%{box-shadow:inset 0 0 160px 50px #ff2d4499}}
+
+/* ---------- console ---------- */
+#console{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:18px;background:var(--panel);overflow:hidden;min-height:470px;max-height:clamp(470px,64vh,660px)}
+#console .chead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#0a0f2c}
+#console .chead .t{font-weight:700;font-size:14px;letter-spacing:.08em}
+#console .chead .sub{font-size:11px;color:var(--muted)}
+#radar{width:64px;height:64px;margin-left:auto;flex:none;border-radius:50%;border:1px solid var(--line);background:#071021}
+#log{flex:1;overflow-y:auto;padding:10px 12px;font-family:var(--mono);font-size:12.5px;line-height:1.5;scroll-behavior:smooth}
+#log .line{display:flex;gap:8px;padding:3px 0;animation:rowin .25s;border-bottom:1px dashed #1a2350}
+@keyframes rowin{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
+#log .ts{color:#515d8e;flex:none;font-variant-numeric:tabular-nums}
+#log .who{flex:none;font-weight:700;min-width:52px;text-align:right}
+#log .msg{color:#c9d3f5}
+#log .r-judge .who{color:var(--cyan)} #log .r-adv .who{color:var(--green)}
+#log .r-skp .who{color:var(--red)} #log .r-clerk .who{color:var(--gold)}
+#log .r-sys .who{color:var(--muted)} #log .r-jury .who{color:var(--amber)}
+#log .big .msg{color:#ffe2b8;font-weight:700}
+.legend{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--line);font-size:10.5px;letter-spacing:.06em;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+
+/* ---------- overlays ---------- */
+.ovl{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:#04061acc;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .35s}
+.ovl.show{opacity:1;pointer-events:auto}
+.sheet{background:linear-gradient(180deg,#121a44,#0c1232);border:1px solid #2c3a7e;border-radius:20px;padding:22px 22px 18px;max-width:600px;width:100%;
+  box-shadow:0 18px 60px #00000088, 0 0 0 6px #0c123266;max-height:92vh;overflow-y:auto}
+.sheet h2{margin:0 0 4px;font-size:clamp(20px,4.5vw,26px);text-wrap:balance}
+.sheet .sub{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+
+/* hero */
+#hero .sheet{text-align:center;max-width:640px;background:linear-gradient(180deg,#131c4e,#0b1138)}
+#hero h1{margin:4px 0 2px;font-size:clamp(30px,7vw,46px);font-weight:700;letter-spacing:.02em;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;text-wrap:balance}
+#hero .tag{color:var(--muted);font-size:15px;margin:0 0 16px}
+.qcard{background:#070c24;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 8px;text-align:left}
+.qcard .lbl{font-size:10.5px;letter-spacing:.16em;color:var(--cyan);font-weight:600}
+.qcard .q{font-size:clamp(15px,3.4vw,18px);font-weight:600;margin:4px 0 2px}
+.qcard .hint{font-size:12.5px;color:var(--muted)}
+.bignums{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0 18px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.bignums span{border:1px dashed var(--line);border-radius:8px;padding:3px 8px}
+.cta{display:inline-flex;align-items:center;gap:10px;border:0;border-radius:16px;cursor:pointer;
+  background:linear-gradient(180deg,#ffd97a,#f3a93c);color:#3a2403;font-size:clamp(17px,4vw,21px);font-weight:700;padding:14px 30px;
+  box-shadow:0 6px 0 #a86f14, 0 10px 30px #f3a93c55;transition:transform .12s, box-shadow .12s;animation:ctapulse 1.8s infinite}
+.cta:hover{transform:translateY(-2px)}
+.cta:active{transform:translateY(3px);box-shadow:0 2px 0 #a86f14}
+.cta svg{width:22px;height:22px}
+@keyframes ctapulse{0%,100%{box-shadow:0 6px 0 #a86f14,0 10px 30px #f3a93c44}50%{box-shadow:0 6px 0 #a86f14,0 10px 44px #f3a93caa}}
+.crew{display:flex;justify-content:center;gap:4px;margin-top:18px}
+.crew i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid #0008}
+.crew .g{background:var(--green)}.crew .r{background:var(--red)}.crew .y{background:var(--gold)}
+.crewlbl{font-size:11.5px;color:var(--muted);margin-top:6px}
+
+/* flight plan */
+#planrows{display:flex;flex-direction:column;gap:6px;margin:6px 0 12px}
+.prow{position:relative;display:flex;gap:9px;align-items:center;background:#070c24;border:1px solid var(--line);border-radius:11px;padding:7px 10px;
+  opacity:0;transform:translateY(10px) scale(.95);transition:opacity .3s,transform .35s cubic-bezier(.3,1.5,.5,1)}
+.prow.pop{opacity:1;transform:none}
+.prow .cid{flex:none;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--cyan);border:1px solid #2c3a7e;border-radius:6px;padding:1px 6px}
+.prow .ctxt{font-size:13px}
+.prow .ctxt b{font-weight:600}
+.prow.struck .ctxt{text-decoration:line-through;color:var(--muted)}
+.prow.struck{border-color:#ff5d6e66;background:#1d0e1e}
+.stamp{position:absolute;right:10px;top:50%;translate:0 -50%;rotate:-12deg;color:var(--red);border:2.5px solid var(--red);border-radius:6px;
+  font-weight:700;font-size:12px;letter-spacing:.18em;padding:1px 8px;background:#1d0e1ecc;
+  animation:slam .35s cubic-bezier(.2,2,.4,1);text-shadow:0 0 8px #ff5d6e66}
+@keyframes slam{from{scale:2.6;opacity:0}to{scale:1;opacity:1}}
+.planfoot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.planfoot .recount{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.planfoot .recount b{color:var(--gold)}
+.approve{margin-left:auto;border:0;border-radius:13px;cursor:pointer;background:linear-gradient(180deg,#6ef7a3,#2cc46a);color:#04300f;
+  font-size:16px;font-weight:700;padding:11px 20px;box-shadow:0 5px 0 #157a3c;animation:ctapulse 1.6s infinite}
+.approve:active{transform:translateY(3px);box-shadow:0 2px 0 #157a3c}
+
+/* dispute / jury */
+#jury .sheet{max-width:720px;text-align:center;border-color:var(--amber);box-shadow:0 0 50px #ffb34733,0 18px 60px #000}
+#jury .vs{font-size:13px;letter-spacing:.3em;color:var(--amber);font-weight:700;margin:2px 0}
+.faceoff{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin:12px 0 6px}
+@media (max-width:620px){.faceoff{grid-template-columns:1fr;gap:6px}.vsmid{padding:2px}}
+.vsmid{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:var(--amber);text-shadow:0 0 14px var(--amber)}
+.ecard{position:relative;text-align:left;border-radius:16px;padding:14px;border:2px solid;background:#070c24;cursor:pointer;color:var(--text);font-family:var(--disp);transition:transform .15s}
+.ecard:hover{transform:translateY(-3px)}
+.ecard.green{border-color:var(--green);box-shadow:0 0 24px #45f08722}
+.ecard.red{border-color:var(--red);box-shadow:0 0 24px #ff5d6e22}
+.ecard .side{font-size:10.5px;font-weight:700;letter-spacing:.14em}
+.ecard.green .side{color:var(--green)}.ecard.red .side{color:var(--red)}
+.ecard .num{font-size:clamp(22px,5vw,30px);font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums}
+.ecard .src{font-size:12.5px;color:var(--muted)}
+.ecard .quote{font-size:12.5px;font-style:italic;color:#c9d3f5;margin-top:6px;border-left:3px solid var(--line);padding-left:8px}
+.ecard .tap{margin-top:10px;font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--amber);opacity:0;transition:opacity .3s}
+#jury.voting .tap{opacity:1}
+#jury.voting .ecard{animation:wiggle 1.4s infinite}
+.ecard.green{animation-delay:.7s}
+@keyframes wiggle{0%,100%{transform:rotate(0)}3%{transform:rotate(-1.1deg)}6%{transform:rotate(1.1deg)}9%{transform:rotate(0)}}
+.rulestamp{position:absolute;left:50%;top:40%;translate:-50% -50%;rotate:-14deg;color:var(--gold);border:3px solid var(--gold);border-radius:8px;
+  font-weight:700;font-size:17px;letter-spacing:.14em;padding:4px 12px;background:#070c24e8;z-index:3;
+  animation:slam .4s cubic-bezier(.2,2,.4,1);box-shadow:0 0 30px #ffc94f88;text-shadow:0 0 10px #ffc94f}
+#jurystatus{font-size:12.5px;color:var(--muted);margin-top:10px;min-height:18px}
+#disputehead{display:none;font-size:clamp(17px,4vw,22px);font-weight:700;color:var(--amber);letter-spacing:.04em;margin:0 0 2px;animation:strobe 0.8s infinite}
+#jury.disputing #disputehead{display:block}
+#jury.disputing #juryhead,#jury.disputing #jurysub{display:none}
+
+/* finale */
+#finale{z-index:35;background:#04061a55;backdrop-filter:none}
+#finale .sheet{max-width:620px;text-align:center;border-color:#ffc94f77;box-shadow:0 0 60px #ffc94f2e,0 18px 60px #000;overflow:visible}
+#missiondone{font-size:clamp(24px,6vw,38px);font-weight:700;letter-spacing:.12em;color:var(--gold);text-shadow:0 0 24px #ffc94f88;margin:2px 0 0;text-wrap:balance}
+#missionsub{color:var(--muted);font-size:13.5px;margin:2px 0 10px}
+#medal{width:104px;height:128px;margin:-66px auto 2px;filter:drop-shadow(0 8px 22px #ffc94f55);animation:medaldrop .9s cubic-bezier(.3,1.6,.4,1)}
+@keyframes medaldrop{0%{transform:translateY(-130px) scale(.4);opacity:0}60%{transform:translateY(8px) scale(1.06,.92);opacity:1}80%{transform:translateY(-5px) scale(.97,1.05)}100%{transform:none}}
+.verdict{background:#070c24;border:1px solid #ffc94f55;border-radius:14px;padding:13px 15px;text-align:left;margin:10px 0}
+.verdict .lbl{font-size:10.5px;letter-spacing:.18em;color:var(--gold);font-weight:700}
+.verdict p{margin:5px 0 0;font-size:14.5px}
+.verdict .cite{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;color:#06234a;background:var(--cyan);border-radius:6px;padding:0 5px;margin:0 2px;text-decoration:none;vertical-align:1px}
+.verdict .cite:hover{background:#9ceaff}
+.score{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+@media (max-width:560px){.score{grid-template-columns:repeat(2,1fr)}}
+.score .cell{background:#070c24;border:1px solid var(--line);border-radius:12px;padding:9px 4px}
+.score .v{font-size:clamp(18px,4vw,24px);font-weight:700;font-variant-numeric:tabular-nums}
+.score .k{font-size:10.5px;letter-spacing:.1em;color:var(--muted)}
+.score .c1 .v{color:var(--green)}.score .c2 .v{color:var(--cyan)}.score .c3 .v{color:var(--gold)}.score .c4 .v{color:var(--amber)}
+.endbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+
+#fxtop{position:fixed;inset:0;z-index:50;pointer-events:none}
+footer.note{color:#515d8e;font-size:11.5px;text-align:center;padding-top:12px}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01s !important;animation-iteration-count:1 !important;transition-duration:.01s !important}
+}
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2c3.5 2 5 6 5 9.5 0 1.8-.4 3.3-1 4.5h-8c-.6-1.2-1-2.7-1-4.5C7 8 8.5 4 12 2z" fill="#54d8ff"/><circle cx="12" cy="9.5" r="2" fill="#071028"/><path d="M8 16l-2.5 4L9 18.5M16 16l2.5 4L15 18.5" fill="#ffc94f"/><path d="M10.5 16.5h3L12 21z" fill="#ff8c42"/></svg>
+      ROCKET CASSATION <span class="chip">MISSION SIM</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="counters">
+      <span>T+<b id="clock">0:00</b></span>
+      <span>sources <b id="srcs">0</b></span>
+      <span>rockets <b id="rockn">0</b>/10</span>
+    </div>
+    <div class="ctrls">
+      <div class="speed" role="group" aria-label="playback speed">
+        <button data-sp="1" class="on">1x</button><button data-sp="2">2x</button><button data-sp="4">4x</button>
+      </div>
+      <button class="btn" id="replaybtn">Replay</button>
+      <button class="btn link" id="skipbtn">skip to finale »</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div id="stage">
+      <canvas id="stars"></canvas>
+      <canvas id="fx"></canvas>
+      <!-- mothership / Judge -->
+      <div class="actor" id="ship" style="left:50%;top:14%">
+        <svg viewBox="0 0 200 110" style="width:clamp(130px,22vw,190px);overflow:visible">
+          <!-- thought dots -->
+          <g class="dots" fill="#54d8ff"><circle cx="150" cy="18" r="4"/><circle cx="163" cy="10" r="5"/><circle cx="178" cy="2" r="6"/></g>
+          <!-- antenna -->
+          <line x1="100" y1="8" x2="100" y2="26" stroke="#8ea2ff" stroke-width="3"/>
+          <circle class="beaconlight" cx="100" cy="7" r="5" fill="#ff5d6e"/>
+          <!-- dome -->
+          <path d="M58 52 A42 30 0 0 1 142 52 Z" fill="#1b2a6b" stroke="#54d8ff" stroke-width="2"/>
+          <!-- judge eyes in dome window -->
+          <rect x="74" y="36" width="52" height="16" rx="8" fill="#071028" stroke="#54d8ff66"/>
+          <circle class="eye" cx="92" cy="44" r="3.4" fill="#fff"/><circle class="eye" cx="108" cy="44" r="3.4" fill="#fff"/>
+          <!-- hull -->
+          <ellipse cx="100" cy="60" rx="72" ry="18" fill="#26337c" stroke="#54d8ff" stroke-width="2"/>
+          <ellipse cx="100" cy="57" rx="72" ry="15" fill="#2e3d95"/>
+          <!-- scales emblem -->
+          <g stroke="#ffc94f" stroke-width="2.4" fill="none">
+            <line x1="100" y1="50" x2="100" y2="64"/><line x1="86" y1="53" x2="114" y2="53"/>
+            <path d="M80 53 l6 9 a6 6 0 0 1 -12 0 z M120 53 l-6 9 a6 6 0 0 0 12 0 z" fill="#ffc94f33"/>
+          </g>
+          <!-- running lights -->
+          <g fill="#9ceaff"><circle cx="44" cy="62" r="2.6"/><circle cx="68" cy="66" r="2.6"/><circle cx="132" cy="66" r="2.6"/><circle cx="156" cy="62" r="2.6"/></g>
+          <!-- bay glow -->
+          <ellipse cx="100" cy="74" rx="26" ry="6" fill="#54d8ff33"/>
+          <rect x="86" y="68" width="28" height="9" rx="4.5" fill="#071028" stroke="#54d8ff55"/>
+        </svg>
+        <div class="label">JUDGE ARGON · MOTHERSHIP</div>
+      </div>
+      <!-- planets + rockets injected by JS -->
+    </div>
+
+    <div id="console">
+      <div class="chead">
+        <div>
+          <div class="t">MISSION CONTROL</div>
+          <div class="sub">live radio — all 10 rockets</div>
+        </div>
+        <canvas id="radar" width="128" height="128"></canvas>
+      </div>
+      <div id="log" aria-live="polite"></div>
+      <div class="legend">
+        <span><i style="background:var(--cyan)"></i>JUDGE</span>
+        <span><i style="background:var(--green)"></i>ADVOCATES defend</span>
+        <span><i style="background:var(--red)"></i>SKEPTICS attack</span>
+        <span><i style="background:var(--gold)"></i>CLERK checks</span>
+      </div>
+    </div>
+  </div>
+  <footer class="note">Scripted mockup — real pipeline streams the same beats over WebSocket. Content: the live c-BAs thermal-conductivity controversy.</footer>
+</div>
+
+<div id="alarmvig"></div>
+
+<!-- ======== HERO / START ======== -->
+<div class="ovl show" id="hero">
+  <div class="sheet">
+    <h1>ROCKET CASSATION</h1>
+    <p class="tag">10 little rockets put one big science question on trial.</p>
+    <div class="qcard">
+      <div class="lbl">TONIGHT'S CASE</div>
+      <div class="q">How much heat can the super-crystal <b>boron arsenide</b> really carry?</div>
+      <div class="hint">Scientists keep changing the number. The Judge will split the question into claims, and rockets will fight over the evidence.</div>
+    </div>
+    <div class="bignums">
+      <span>2013 theory: ~2200</span><span>2015 lab: ~190 ?!</span><span>2018 record: ~1300</span><span>2025: &gt;2100 ?!</span>
+    </div>
+    <div>
+      <button class="cta" id="startbtn">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2c3.5 2 5 6 5 9.5 0 1.8-.4 3.3-1 4.5h-8c-.6-1.2-1-2.7-1-4.5C7 8 8.5 4 12 2z" fill="#3a2403"/><circle cx="12" cy="9.5" r="2" fill="#ffd97a"/><path d="M10.5 16.5h3L12 21z" fill="#3a2403"/></svg>
+        Start the Trial
+      </button>
+    </div>
+    <div class="crew" aria-hidden="true"><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="g"></i><i class="r"></i><i class="r"></i><i class="r"></i><i class="r"></i><i class="y"></i></div>
+    <div class="crewlbl">5 green Advocates · 4 red Skeptics · 1 gold Clerk — ready in the launch bay</div>
+  </div>
+</div>
+
+<!-- ======== FLIGHT PLAN / APPROVAL ======== -->
+<div class="ovl" id="plan">
+  <div class="sheet">
+    <h2>Judge Argon's Flight Plan</h2>
+    <p class="sub">The big question, split into 9 small claims — one planet each. <b style="color:var(--amber)">You</b> approve the plan before anything flies.</p>
+    <div id="planrows"></div>
+    <div class="planfoot">
+      <div class="recount" id="recount">9 claims · 10 rockets fueled</div>
+      <button class="approve" id="approvebtn">APPROVE &amp; LAUNCH</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== DISPUTE + JURY ======== -->
+<div class="ovl" id="jury">
+  <div class="sheet">
+    <div id="disputehead">⚠ CLAIM 2 CONTESTED — SOURCES AT WAR</div>
+    <h2 id="juryhead">You're the Jury!</h2>
+    <p class="sub" id="jurysub">Ada and Rex both found real papers — and the numbers disagree. The rockets can't settle it. <b style="color:var(--amber)">Tap the evidence you trust more.</b></p>
+    <div class="faceoff">
+      <button class="ecard green" id="cardA">
+        <div class="side">ADA DEFENDS — THE FAMOUS RECORD</div>
+        <div class="num">~1300 W/mK</div>
+        <div class="src">Kang et al., <b>Science</b>, 2018</div>
+        <div class="quote">"…the highest among all metals and semiconductors" — three labs confirmed ~900–1300.</div>
+        <div class="tap">TAP TO RULE FOR 2018</div>
+      </button>
+      <div class="vsmid">VS</div>
+      <button class="ecard red" id="cardB">
+        <div class="side">REX OBJECTS — THE NEW MEASUREMENT</div>
+        <div class="num">&gt;2100 W/mK</div>
+        <div class="src">Niyikiza et al., <b>Materials Today</b>, 2025</div>
+        <div class="quote">Purified-arsenic crystals: the old record was ~60% low because of impurities, not physics.</div>
+        <div class="tap">TAP TO RULE FOR 2025</div>
+      </button>
+    </div>
+    <div id="jurystatus"></div>
+  </div>
+</div>
+
+<!-- ======== FINALE ======== -->
+<div class="ovl" id="finale">
+  <div class="sheet">
+    <svg id="medal" viewBox="0 0 104 128" aria-hidden="true">
+      <path d="M38 0 L52 34 L66 0 Z" fill="#ff5d6e"/><path d="M24 0 L44 40 L60 40 L36 0 Z" fill="#54d8ff"/><path d="M80 0 L60 40 L44 40 L68 0 Z" fill="#2e3d95"/>
+      <circle cx="52" cy="76" r="38" fill="#b8860b"/><circle cx="52" cy="74" r="36" fill="#ffc94f"/>
+      <circle cx="52" cy="74" r="28" fill="#f3a93c" stroke="#b8860b" stroke-width="2"/>
+      <path d="M38 74 L48 85 L68 62" stroke="#3a2403" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div id="missiondone">MISSION COMPLETE</div>
+    <div id="missionsub">All rockets home · verdict stamped and cited</div>
+    <div class="verdict">
+      <div class="lbl">THE COURT'S VERDICT</div>
+      <p>The heat superpower is <b>real — and bigger than we thought</b>. New purified-arsenic crystals carry
+        <b style="color:var(--green)">over 2100 W/mK</b><a class="cite" href="https://doi.org/10.1016/j.mattod.2025.09.021" target="_blank" rel="noopener">3</a>,
+        beating the famous 1300 record<a class="cite" href="https://doi.org/10.1126/science.aat5522" target="_blank" rel="noopener">1</a>.
+        Theory's old ~1400 ceiling<a class="cite" href="https://doi.org/10.1103/PhysRevB.96.161201" target="_blank" rel="noopener">2</a> is being rebuilt.
+        <b style="color:var(--gold)" id="jurysent">You, the Jury, ruled for the 2025 measurement</b> — stamped human-adjudicated.</p>
+    </div>
+    <div class="score">
+      <div class="cell c1"><div class="v" id="sc-src">13</div><div class="k">SOURCES FOUND</div></div>
+      <div class="cell c2"><div class="v">10</div><div class="k">ROCKETS FLOWN</div></div>
+      <div class="cell c3"><div class="v">8/9</div><div class="k">CLAIMS SETTLED</div></div>
+      <div class="cell c4"><div class="v" id="sc-time">0:58</div><div class="k">MISSION TIME</div></div>
+    </div>
+    <div class="endbtns">
+      <button class="cta" id="replaybtn2" style="font-size:17px;padding:11px 24px">Fly it again</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="fxtop"></canvas>
+
+<script>
+(()=>{ 'use strict';
+const $=s=>document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage=$('#stage'), log=$('#log');
+
+/* ================= DATA ================= */
+const CLAIMS=[
+ {id:'C1',x:.14,y:.36,nick:'The Prediction',hue:[220,'#3d58d8','#141d54'],text:'<b>2013 theory:</b> BAs could carry heat almost like diamond (~2200 W/mK).'},
+ {id:'C2',x:.50,y:.47,nick:'The Record',big:1,hue:[190,'#2fa8c9','#0d3550'],text:'<b>The record:</b> ~1300 W/mK measured in 2018 (Science).'},
+ {id:'C3',x:.86,y:.36,nick:'First Try',hue:[280,'#8a4fd8','#2a1454'],text:'<b>First crystals (2015)</b> only reached ~190 W/mK.'},
+ {id:'C4',x:.70,y:.55,nick:'The Ceiling',hue:[260,'#6050d0','#1c1650'],text:'<b>2017 theory:</b> four-phonon physics caps BAs near ~1400.'},
+ {id:'C5',x:.14,y:.72,nick:'Isotope Boost',hue:[320,'#c04f9a','#44123a'],text:'<b>Isotope-pure BAs</b> triples the number. <i>(it doesn’t — only 8–13%)</i>'},
+ {id:'C6',x:.38,y:.80,nick:'Three Labs',hue:[200,'#3f8ad8','#10294e'],text:'<b>Three separate labs</b> confirmed ~900–1300 in 2018.'},
+ {id:'C7',x:.62,y:.80,nick:'The 2025 Leap',hue:[150,'#3cb98a','#0e3a2b'],text:'<b>2025 purified-arsenic crystals</b> beat 2100 W/mK.'},
+ {id:'C8',x:.86,y:.72,nick:'Double-Check',hue:[30,'#d8923f','#4a2a0e'],text:'<b>A second technique</b> also saw &gt;2000 in the same crystals.'},
+ {id:'C9',x:.30,y:.55,nick:'Cool Chips',hue:[185,'#39c3c9','#0c3a3d'],text:'<b>BAs is a semiconductor</b> — it could cool computer chips from inside.'},
+];
+const STRUCK='C5';
+const AGENTS=[
+ {n:'Ada', role:'adv', claim:'C2', hull:'#45f087', flame:'#7dffb0'},
+ {n:'Rex', role:'skp', claim:'C2', hull:'#ff5d6e', flame:'#ff9aa4'},
+ {n:'Pip', role:'adv', claim:'C1', hull:'#2cc46a', flame:'#7dffb0'},
+ {n:'Nix', role:'skp', claim:'C3', hull:'#e04355', flame:'#ff9aa4'},
+ {n:'Ivy', role:'adv', claim:'C6', hull:'#6ef7a3', flame:'#b4ffd1'},
+ {n:'Vex', role:'skp', claim:'C4', hull:'#ff7b6e', flame:'#ffb3a8'},
+ {n:'Leo', role:'adv', claim:'C7', hull:'#35d87f', flame:'#7dffb0'},
+ {n:'Zed', role:'skp', claim:'C8', hull:'#d84f8a', flame:'#ff9ac9'},
+ {n:'Sol', role:'adv', claim:'C9', hull:'#9df05f', flame:'#d2ff9e'},
+ {n:'Bo',  role:'clerk', claim:null, hull:'#ffc94f', flame:'#ffe29e'},
+];
+const SHIP={x:.5,y:.14};
+const FLIGHT=2.4;
+
+/* ================= BUILD DOM ================= */
+const planetEls={}, rocketEls={};
+function buildPlanets(){
+  CLAIMS.forEach(c=>{
+    const d=document.createElement('div'); d.className='planet'; d.dataset.state='pending';
+    const size=c.big?'clamp(56px,11vw,76px)':'clamp(40px,8vw,56px)';
+    d.innerHTML=`<div class="ball" style="--d:${size};background:radial-gradient(circle at 35% 30%, ${c.hue[1]}, ${c.hue[2]} 70%)"></div>
+      <span class="tag"><b>${c.id}</b><span class="nk"> · ${c.nick}</span></span>`;
+    stage.appendChild(d); planetEls[c.id]=d;
+  });
+}
+function rocketSVG(a){
+  return `<svg viewBox="0 0 60 92" style="--hull:${a.hull};--flame:${a.flame}">
+    <g class="flame"><path d="M30 64 C22 76 24 86 30 92 C36 86 38 76 30 64" fill="${a.flame}"/>
+      <path d="M30 68 C26 76 27 82 30 86 C33 82 34 76 30 68" fill="#fff" opacity=".75"/></g>
+    <path d="M14 44 L2 62 L15 58 Z" fill="${a.hull}" stroke="#060a1e" stroke-width="2"/>
+    <path d="M46 44 L58 62 L45 58 Z" fill="${a.hull}" stroke="#060a1e" stroke-width="2"/>
+    <path d="M30 1 C41 11 45 23 45 37 L45 56 C45 63 38 67 30 67 C22 67 15 63 15 56 L15 37 C15 23 19 11 30 1" fill="${a.hull}" stroke="#060a1e" stroke-width="2.5"/>
+    <path d="M30 1 C36 7 40 15 42 24 L18 24 C20 15 24 7 30 1" fill="#ffffff" opacity=".28"/>
+    <circle class="win" cx="30" cy="36" r="11.5" fill="#071028" stroke="#ffffff55" stroke-width="2"/>
+    <g class="face">
+      <circle class="eye" cx="25.5" cy="34" r="2.8" fill="#fff" style="transform-origin:25.5px 34px"/>
+      <circle class="eye" cx="34.5" cy="34" r="2.8" fill="#fff" style="transform-origin:34.5px 34px"/>
+      <path class="mouth" d="M25.5 40 Q30 44 34.5 40" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+    <rect x="22" y="52" width="16" height="4" rx="2" fill="#071028" opacity=".5"/>
+  </svg>`;
+}
+function buildRockets(){
+  AGENTS.forEach(a=>{
+    const d=document.createElement('div'); d.className='rocket'; d.hidden=true;
+    d.innerHTML=rocketSVG(a)+`<span class="nametag" style="--hull:${a.hull}">${a.n}</span>`;
+    stage.appendChild(d); rocketEls[a.n]=d;
+    a.el=d; a.state='bay'; a.launchT=0; a.px=0; a.py=0; a.rot=0;
+  });
+}
+buildPlanets(); buildRockets();
+
+/* flight plan rows */
+const planrows=$('#planrows');
+CLAIMS.forEach(c=>{
+  const r=document.createElement('div'); r.className='prow'; r.id='prow-'+c.id;
+  r.innerHTML=`<span class="cid">${c.id}</span><span class="ctxt">${c.text}</span>`;
+  planrows.appendChild(r);
+});
+
+/* ================= CANVASES ================= */
+const stars=$('#stars'), fx=$('#fx'), fxtop=$('#fxtop'), radar=$('#radar');
+const sctx=stars.getContext('2d'), fctx=fx.getContext('2d'), tctx=fxtop.getContext('2d'), rctx=radar.getContext('2d');
+let SW=0,SH=0, DPR=Math.min(devicePixelRatio||1,2);
+function sizeCanvases(){
+  const r=stage.getBoundingClientRect(); SW=r.width; SH=r.height;
+  [stars,fx].forEach(c=>{c.width=SW*DPR;c.height=SH*DPR;c.getContext('2d').setTransform(DPR,0,0,DPR,0,0);});
+  fxtop.width=innerWidth*DPR; fxtop.height=innerHeight*DPR; tctx.setTransform(DPR,0,0,DPR,0,0);
+  radar.width=64*DPR; radar.height=64*DPR;
+}
+addEventListener('resize',sizeCanvases); sizeCanvases();
+
+/* starfield */
+const STARN=RM?60:130;
+const starfield=Array.from({length:STARN},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.5+.4,tw:Math.random()*6.28,sp:.2+Math.random()*.8}));
+function drawStars(now){
+  sctx.clearRect(0,0,SW,SH);
+  for(const s of starfield){
+    const a=RM?.8:.45+.45*Math.sin(now*.001*s.sp*3+s.tw);
+    sctx.globalAlpha=a; sctx.fillStyle=s.r>1.3?'#ffe9b5':'#cfe4ff';
+    sctx.beginPath(); sctx.arc(s.x*SW,s.y*SH,s.r,0,6.28); sctx.fill();
+  }
+  sctx.globalAlpha=1;
+}
+
+/* particles (stage fx + fxtop fireworks) */
+let parts=[], topParts=[];
+function emit(x,y,color,n,spd,life,up){
+  if(RM) n=Math.ceil(n/4);
+  for(let i=0;i<n;i++){
+    const a=Math.random()*6.28, v=spd*(.4+Math.random()*.8);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v+(up||0),life:life*(.6+Math.random()*.6),age:0,c:color,r:1.2+Math.random()*1.8});
+  }
+}
+function firework(x,y,color){
+  const n=RM?20:70;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*6.28, v=2.2+Math.random()*3.4;
+    topParts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1.1+Math.random()*.7,age:0,c:color,r:1.4+Math.random()*2,g:.035,tr:1});
+  }
+}
+/* radar */
+let radarAngle=0;
+function drawRadar(dt,active){
+  const w=64,c=32; rctx.setTransform(DPR,0,0,DPR,0,0); rctx.clearRect(0,0,w,w);
+  rctx.strokeStyle='#1d3a3f'; rctx.lineWidth=1;
+  [10,20,29].forEach(r=>{rctx.beginPath();rctx.arc(c,c,r,0,6.28);rctx.stroke();});
+  radarAngle+=dt*2;
+  const g=rctx.createLinearGradient(c,c,c+Math.cos(radarAngle)*29,c+Math.sin(radarAngle)*29);
+  g.addColorStop(0,'#45f08700'); g.addColorStop(1,'#45f087aa');
+  rctx.strokeStyle=g; rctx.lineWidth=2;
+  rctx.beginPath(); rctx.moveTo(c,c); rctx.lineTo(c+Math.cos(radarAngle)*29,c+Math.sin(radarAngle)*29); rctx.stroke();
+  if(active){
+    AGENTS.forEach(a=>{ if(a.state==='bay')return;
+      const col=a.role==='adv'?'#45f087':a.role==='skp'?'#ff5d6e':'#ffc94f';
+      rctx.fillStyle=col; rctx.beginPath();
+      rctx.arc(6+(a.px/Math.max(SW,1))*52, 6+(a.py/Math.max(SH,1))*52, 2, 0, 6.28); rctx.fill();
+    });
+  }
+}
+
+/* ================= LOG + COUNTERS ================= */
+let missionTime=0, sources=0, rocketsOut=0;
+function fmt(t){const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+String(s).padStart(2,'0')}
+function syncCounters(){$('#clock').textContent=fmt(missionTime);$('#srcs').textContent=sources;$('#rockn').textContent=rocketsOut;}
+function say(role,who,msg,big){
+  const d=document.createElement('div'); d.className='line r-'+role+(big?' big':'');
+  d.innerHTML=`<span class="ts">${fmt(missionTime)}</span><span class="who">${who}</span><span class="msg">${msg}</span>`;
+  log.appendChild(d); log.scrollTop=log.scrollHeight;
+  while(log.children.length>120) log.removeChild(log.firstChild);
+}
+function addSources(n){sources+=n;}
+
+/* ================= GEOMETRY ================= */
+function P(fx_,fy_){return {x:fx_*SW, y:fy_*SH}}
+function claimOf(id){return CLAIMS.find(c=>c.id===id)}
+function bez(p0,p1,p2,t){const u=1-t;return{x:u*u*p0.x+2*u*t*p1.x+t*t*p2.x, y:u*u*p0.y+2*u*t*p1.y+t*t*p2.y}}
+function easeIO(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function placePlanets(){
+  CLAIMS.forEach(c=>{const el=planetEls[c.id]; el.style.left=(c.x*100)+'%'; el.style.top=(c.y*100)+'%';});
+}
+placePlanets(); addEventListener('resize',placePlanets);
+
+/* ================= SIM ENGINE ================= */
+let phase='idle';        // idle | plan | approval | run | dispute | jury | verdict | done
+let seg=-1, segT=0, paused=true, speed=1, fired=[];
+let disputeBeams=false, autoTimer=0;
+
+function setSpeed(n){speed=n; document.querySelectorAll('.speed button').forEach(b=>b.classList.toggle('on',+b.dataset.sp===n));}
+document.querySelectorAll('.speed button').forEach(b=>b.onclick=()=>setSpeed(+b.dataset.sp));
+
+/* ---- segment event tables (t = seconds at 1x) ---- */
+const SEG0=[ // from Start
+ {t:.2,f:(i)=>{ $('#ship').classList.add('think'); say('judge','JUDGE','Hmm… one big question. Let me split it into small, testable claims.'); }},
+ ...CLAIMS.map((c,ix)=>({t:1.6+ix*.75,f:(i)=>{ const r=$('#prow-'+c.id); if(ix===0&&!$('#plan').classList.contains('show'))$('#plan').classList.add('show'); r.classList.add('pop'); if(ix===CLAIMS.length-1){say('judge','JUDGE','9 claims on the docket. Waiting for Mission Control (that’s you) to approve.');} }})),
+ {t:8.6,f:(i)=>{ // strike C5
+   const r=$('#prow-'+STRUCK); r.classList.add('struck');
+   const st=document.createElement('span'); st.className='stamp'; st.textContent='STRUCK'; r.appendChild(st);
+   say('jury','YOU','Claim 5 looks fishy — isotopes only add 8–13%. STRUCK from the plan.');
+   $('#recount').innerHTML='<b>9 → 8 claims</b> · 10 rockets fueled · C5 struck';
+ }},
+ {t:9.4,f:(i)=>{ gate('approval', i?0:2600); }},
+];
+const LAUNCH_BASE=1.3, LAUNCH_GAP=.62;
+const SEG1=[ // from Approve
+ {t:.05,f:(i)=>{ $('#plan').classList.remove('show'); $('#ship').classList.remove('think');
+   CLAIMS.forEach((c,ix)=>{ const el=planetEls[c.id]; setTimeout(()=>el.classList.add('pop'), i?0:ix*80);
+     if(c.id===STRUCK){el.classList.add('struck'); el.dataset.state='struck';
+       if(!el.querySelector('.x')){const x=document.createElement('div');x.className='x';x.textContent='✕ STRUCK';el.appendChild(x);}}
+   });
+   say('judge','JUDGE','Plan approved! Claims deployed as planets. Rockets — to your stations!');
+ }},
+ ...AGENTS.map((a,ix)=>({t:LAUNCH_BASE+ix*LAUNCH_GAP,f:(i)=>launchAgent(a,LAUNCH_BASE+ix*LAUNCH_GAP,i)})),
+ {t:9.2,f:()=>{evid('Pip','adv','C1','supported',1,'Found it! 2013 theory said ~2200 W/mK — “a competitor for diamond.”')}},
+ {t:10.8,f:()=>{evid('Ada','adv','C2','supported',1,'Kang 2018, <i>Science</i>: measured ~1300 W/mK — a world record!')}},
+ {t:12.4,f:()=>{evid('Nix','skp','C3','supported',1,'The 2015 crystals only hit ~190 — stuffed with tiny defects. True, but old news!')}},
+ {t:14.0,f:()=>{evid('Ivy','adv','C6','supported',3,'Three separate labs all landed at ~900–1300 in 2018. Rock solid!')}},
+ {t:15.6,f:()=>{evid('Vex','skp','C4','supported',1,'2017 theory: four-phonon physics caps it near 1400. Noted… for now.')}},
+ {t:17.2,f:()=>{evid('Leo','adv','C7','supported',1,'BIG ONE! 2025 purified-arsenic crystals: OVER 2100 W/mK!')}},
+ {t:18.6,f:()=>{ say('clerk','BO','Clerk check: Science 2018 ✓ real paper. Materials Today 2025 ✓ real paper.'); addSources(2); syncCounters(); happy('Bo'); }},
+ {t:20.0,f:()=>{evid('Zed','skp','C8','supported',1,'I tried to break Claim 8… but a second method also saw >2000. It holds!')}},
+ {t:21.6,f:()=>{ evid('Rex','skp','C2','contested',1,'OBJECTION! Leo’s 2025 paper beats Ada’s record — the 1300 number is too low!',1);
+   evid('Vex','skp','C4','challenged',0,'Then the 1400 ceiling is broken too! Challenging Claim 4!'); }},
+ {t:23.2,f:()=>{evid('Sol','adv','C9','supported',1,'BAs is a semiconductor — it could cool chips from the inside. Diamond can’t do that!')}},
+ {t:24.6,f:()=>{ say('clerk','BO','Claim 2 is a stalemate: 1300 vs 2100+. Two real papers at war. CALLING THE JURY!',1); }},
+ {t:25.6,f:(i)=>{ startDispute(i); }},
+ {t:28.6,f:(i)=>{ gate('jury', i?0:6500); }},
+];
+const SEG2=[ // from Ruling
+ {t:.1,f:(i)=>{ const b=ruledFor==='b';
+   say('jury','YOU',`Ruled for the ${b?'2025 measurement':'2018 record'} — stamped HUMAN RULED, permanently.`,1);
+   setClaim('C2','ruled',`C2 · ${b?'>2100':'~1300'} ✔ YOU RULED`); }},
+ {t:1.4,f:(i)=>{ endDispute(); $('#jury').classList.remove('show','voting','disputing'); $('#ship').classList.add('think');
+   say('judge','JUDGE','Thank you, Jury. Writing the verdict with every source cited…'); }},
+ {t:3.0,f:(i)=>{ $('#ship').classList.remove('think'); beginFinale(i); }},
+];
+const SEGS=[SEG0,SEG1,SEG2];
+const SEG_DUR=[9.4,28.6,3.0];
+const NOMINAL=[0,12.0,41.6]; // nominal mission clock at start of each segment
+
+/* ---- helpers used by events ---- */
+function launchAgent(a,at,instant){
+  a.el.hidden=false; a.state='fly'; a.launchT=at; rocketsOut++; syncCounters();
+  const role=a.role==='adv'?'adv':a.role==='skp'?'skp':'clerk';
+  const who=a.n.toUpperCase();
+  const dest=a.claim?`Claim ${a.claim.slice(1)} (${claimOf(a.claim).nick})`:'center patrol';
+  const verb=a.role==='adv'?'blasts off to defend':a.role==='skp'?'blasts off to attack':'lifts off to referee';
+  say(role,who,`${a.n} ${verb} ${dest}!`);
+  if(a.claim) planetEls[a.claim].dataset.state='running';
+  if(!instant&&!RM){ stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+    const p=P(SHIP.x,SHIP.y); emit(p.x,p.y+14,'#ffe29e',26,2.6,.7,.8); }
+}
+function orbitPoint(a){ // target orbit center
+  if(!a.claim) return P(.5,.33);
+  const c=claimOf(a.claim); return P(c.x,c.y);
+}
+function orbitRadius(a){ const c=a.claim?claimOf(a.claim):null; return (c&&c.big?52:40)+(a.role==='skp'?10:0); }
+function evid(name,role,claim,state,nsrc,msg,flash){
+  say(role,name.toUpperCase(),msg,flash);
+  if(nsrc){addSources(nsrc); syncCounters();}
+  setClaim(claim,state);
+  happy(name);
+}
+function happy(name){ const el=rocketEls[name]; el.classList.remove('yay'); void el.offsetWidth; el.classList.add('yay');
+  const a=AGENTS.find(x=>x.n===name); if(a&&a.state!=='bay') emit(a.px,a.py,'#ffe9b5',14,1.8,.6);
+}
+function setClaim(id,state,tagHTML){
+  const el=planetEls[id]; el.dataset.state=state;
+  if(tagHTML) el.querySelector('.tag').innerHTML='<b>'+tagHTML+'</b>';
+}
+/* dispute */
+function startDispute(instant){
+  phase='dispute'; disputeBeams=true;
+  if(!RM) document.body.classList.add('alarm');
+  const j=$('#jury'); j.classList.add('show','disputing');
+  say('sys','ALERT','⚠ DISPUTE on Claim 2 — tractor beams locked. Sources face off.',1);
+  // park Ada & Rex on opposite sides
+  const ada=AGENTS.find(a=>a.n==='Ada'), rex=AGENTS.find(a=>a.n==='Rex');
+  ada.lock=Math.PI; rex.lock=0;
+}
+function endDispute(){ disputeBeams=false; document.body.classList.remove('alarm');
+  const ada=AGENTS.find(a=>a.n==='Ada'), rex=AGENTS.find(a=>a.n==='Rex'); ada.lock=rex.lock=undefined; }
+
+/* gates (approval / jury) */
+function gate(kind,autoMs){
+  paused=true; phase=kind;
+  if(kind==='approval'){ /* plan sheet already open */ }
+  else { $('#jury').classList.remove('disputing'); $('#jury').classList.add('voting');
+    $('#jurystatus').textContent='(demo auto-rules for 2025 in a few seconds — or tap a card)'; }
+  clearTimeout(autoTimer);
+  if(autoMs) autoTimer=setTimeout(kind==='approval'?approve:(()=>rule('b')), autoMs/speed);
+}
+function approve(){
+  if(!(phase==='approval'||(seg===0&&segT>=8.7)))return; clearTimeout(autoTimer);
+  startSeg(1);
+}
+let ruledFor='b';
+function rule(which){
+  if(phase!=='jury')return; clearTimeout(autoTimer);
+  ruledFor=which;
+  const card=which==='a'?$('#cardA'):$('#cardB');
+  if(!card.querySelector('.rulestamp')){
+    const st=document.createElement('div'); st.className='rulestamp'; st.textContent='HUMAN RULED'; card.appendChild(st);
+  }
+  firework(innerWidth/2,innerHeight*.35,'#ffc94f');
+  setTimeout(()=>startSeg(2), RM?50:650/speed);
+}
+$('#approvebtn').onclick=approve;
+$('#cardA').onclick=()=>rule('a'); $('#cardB').onclick=()=>rule('b');
+
+/* finale */
+let finaleOn=false, constel=0, fwTimer=0;
+function beginFinale(instant){
+  phase='done'; finaleOn=true; constel=0; missionTime=Math.min(missionTime,99*60);
+  $('#sc-time').textContent=fmt(missionTime);
+  $('#jurysent').textContent=`You, the Jury, ruled for the ${ruledFor==='b'?'2025 measurement':'2018 record'}`;
+  say('judge','JUDGE','VERDICT IN. Mission complete — every rocket home, every claim cited. ⭐',1);
+  $('#finale').classList.add('show');
+  // send rockets home visually: they keep orbiting, planets glow
+  CLAIMS.forEach(c=>{const s=planetEls[c.id].dataset.state; if(s==='running')planetEls[c.id].dataset.state='supported';});
+}
+function drawConstellation(dt){
+  if(!finaleOn)return;
+  constel=Math.min(1,constel+dt*.55);
+  const path=['C9','C6','C3'].map(id=>{const c=claimOf(id);return{x:c.x*SW, y:c.y*SH}});
+  // faint spokes from every live planet to nearest check node
+  fctx.save();
+  fctx.globalAlpha=.35*constel; fctx.strokeStyle='#ffc94f'; fctx.lineWidth=1;
+  CLAIMS.forEach(c=>{ if(c.id===STRUCK)return;
+    const p={x:c.x*SW,y:c.y*SH};
+    let best=path[0],bd=1e9; path.forEach(q=>{const d=(q.x-p.x)**2+(q.y-p.y)**2; if(d<bd){bd=d;best=q}});
+    fctx.beginPath(); fctx.moveTo(p.x,p.y); fctx.lineTo(best.x,best.y); fctx.stroke();
+  });
+  // the check stroke
+  const segs=[[path[0],path[1]],[path[1],path[2]]];
+  const total=2, prog=constel*total;
+  fctx.lineCap='round'; fctx.shadowColor='#ffc94f'; fctx.shadowBlur=RM?0:18;
+  segs.forEach(([a,b],i)=>{
+    const p=Math.max(0,Math.min(1,prog-i)); if(p<=0)return;
+    fctx.globalAlpha=.95; fctx.strokeStyle='#ffe29e'; fctx.lineWidth=5;
+    fctx.beginPath(); fctx.moveTo(a.x,a.y); fctx.lineTo(a.x+(b.x-a.x)*p, a.y+(b.y-a.y)*p); fctx.stroke();
+  });
+  // star nodes
+  path.forEach((p,i)=>{ if(prog>i*0.9){ fctx.globalAlpha=1; fctx.fillStyle='#fff';
+    fctx.beginPath(); fctx.arc(p.x,p.y,4,0,6.28); fctx.fill(); }});
+  fctx.restore();
+}
+
+/* ---- segment runner ---- */
+function startSeg(n){
+  seg=n; segT=0; paused=false; fired=SEGS[n].map(()=>false);
+  missionTime=Math.max(missionTime,NOMINAL[n]);
+  phase=n===0?'plan':n===1?'run':'verdict';
+}
+function fireDue(instant){
+  const evs=SEGS[seg];
+  for(let i=0;i<evs.length;i++){
+    if(!fired[i]&&evs[i].t<=segT){ fired[i]=true; evs[i].f(instant?1:0); }
+  }
+}
+/* start / replay / skip */
+function start(){
+  if(phase!=='idle')return;
+  $('#hero').classList.remove('show');
+  missionTime=0; startSeg(0);
+}
+$('#startbtn').onclick=start;
+function reset(){
+  clearTimeout(autoTimer); paused=true; seg=-1; phase='idle'; ruledFor='b';
+  missionTime=0; sources=0; rocketsOut=0; syncCounters();
+  parts=[]; topParts=[]; finaleOn=false; disputeBeams=false; endDispute();
+  document.body.classList.remove('alarm');
+  ['#plan','#jury','#finale'].forEach(s=>$(s).classList.remove('show','voting','disputing'));
+  $('#hero').classList.add('show');
+  log.innerHTML=''; $('#ship').classList.remove('think');
+  CLAIMS.forEach(c=>{const el=planetEls[c.id]; el.classList.remove('pop','struck'); el.dataset.state='pending';
+    const x=el.querySelector('.x'); if(x)x.remove();
+    el.querySelector('.tag').innerHTML=`<b>${c.id}</b><span class="nk"> · ${c.nick}</span>`;});
+  AGENTS.forEach(a=>{a.state='bay'; a.el.hidden=true; a.lock=undefined; a.el.classList.remove('yay');});
+  document.querySelectorAll('.prow').forEach(r=>{r.classList.remove('pop','struck'); const s=r.querySelector('.stamp'); if(s)s.remove();});
+  $('#recount').innerHTML='9 claims · 10 rockets fueled';
+  const st=$('#cardB .rulestamp'); if(st)st.remove(); const st2=$('#cardA .rulestamp'); if(st2)st2.remove();
+  tctx.clearRect(0,0,innerWidth,innerHeight); fctx.clearRect(0,0,SW,SH);
+}
+function replay(){ reset(); start(); }
+$('#replaybtn').onclick=replay; $('#replaybtn2').onclick=replay;
+
+function runSegInstant(n,upTo){
+  startSeg(n); segT=(upTo===undefined)?SEG_DUR[n]+.01:upTo;
+  const evs=SEGS[n];
+  for(let i=0;i<evs.length;i++){ if(evs[i].t<=segT&&!fired[i]){fired[i]=true; evs[i].f(1);} }
+  missionTime=NOMINAL[n]+Math.min(segT,SEG_DUR[n]); syncCounters();
+}
+function skipToFinale(){
+  if(phase==='done')return;
+  reset(); $('#hero').classList.remove('show');
+  clearTimeout(autoTimer);
+  runSegInstant(0); $('#plan').classList.remove('show');
+  runSegInstant(1); endDispute(); document.body.classList.remove('alarm');
+  $('#jury').classList.remove('show','voting','disputing');
+  const card=$('#cardB'); if(!card.querySelector('.rulestamp')){const st=document.createElement('div');st.className='rulestamp';st.textContent='HUMAN RULED';card.appendChild(st);}
+  runSegInstant(2);
+  missionTime=58; $('#sc-time').textContent=fmt(missionTime); syncCounters();
+}
+$('#skipbtn').onclick=skipToFinale;
+
+/* jump for tests: CASSATION.jump(seg, t) */
+function jump(n,t){
+  reset(); $('#hero').classList.remove('show');
+  if(n===0){ runSegInstant(0,t); paused=false; return; }
+  runSegInstant(0); $('#plan').classList.remove('show');
+  if(n===1){ runSegInstant(1,t); paused=false;
+    if(t>=28.6){gate('jury',6000);} return; }
+  runSegInstant(1); endDispute(); document.body.classList.remove('alarm');
+  $('#jury').classList.remove('show','voting','disputing');
+  const card=$('#cardB'); if(!card.querySelector('.rulestamp')){const st=document.createElement('div');st.className='rulestamp';st.textContent='HUMAN RULED';card.appendChild(st);}
+  runSegInstant(2,t); paused=false;
+}
+window.CASSATION={start,approve,rule,skipToFinale,setSpeed,jump,replay,get state(){return{phase,seg,segT,missionTime}}};
+
+/* ================= RENDER LOOP ================= */
+let last=performance.now(), fwAccum=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  const rdt=Math.min(.05,(now-last)/1000); last=now;
+  const dt=rdt*speed;
+  drawStars(now);
+  if(seg>=0&&!paused){
+    segT+=dt; if(phase!=='done'){missionTime+=dt;} fireDue(false); syncCounters();
+  }
+  /* rockets */
+  const sp=P(SHIP.x,SHIP.y);
+  AGENTS.forEach(a=>{
+    if(a.state==='bay')return;
+    const tNow=seg===1?segT:(seg===2?SEG_DUR[1]+segT:a.launchT);
+    const o=orbitPoint(a), R=orbitRadius(a);
+    const el=a.el; let x,y,rot;
+    const ft=(tNow-a.launchT)/FLIGHT;
+    if(ft<1){ // flying
+      const ctrl={x:(sp.x+o.x)/2+(o.x>sp.x?-1:1)*SH*.22, y:Math.min(sp.y,o.y)-SH*.10};
+      const e=easeIO(Math.max(0,ft));
+      const p=bez(sp,ctrl,o,e), p2=bez(sp,ctrl,o,Math.min(1,e+.02));
+      x=p.x;y=p.y; const head=Math.atan2(p2.y-p.y,p2.x-p.x); rot=head+Math.PI/2;
+      if(!RM){const col=a.role==='adv'?'#45f087':a.role==='skp'?'#ff5d6e':'#ffc94f';
+        for(let q=0;q<2;q++){const bs=1.4+Math.random()*1.2;
+          parts.push({x:x-Math.cos(head)*14,y:y-Math.sin(head)*14,vx:-Math.cos(head)*bs+(Math.random()-.5)*.7,vy:-Math.sin(head)*bs+(Math.random()-.5)*.7,life:.7,age:0,c:q?col:'#ffe9b5',r:2.2});}}
+      el.classList.remove('idleflame');
+    } else { // orbiting
+      const ang=(a.lock!==undefined)?a.lock:( (tNow-a.launchT-FLIGHT)*(a.role==='skp'?-.9:.75)+a.launchT*2 );
+      x=o.x+Math.cos(ang)*R; y=o.y+Math.sin(ang)*R*.72;
+      rot=(a.lock!==undefined)?(a.lock===0?-Math.PI/2:Math.PI/2):ang+Math.PI;
+      el.classList.add('idleflame');
+      if(!RM&&Math.random()<.08) parts.push({x,y,vx:(Math.random()-.5)*.4,vy:.5,life:.5,age:0,c:'#ffffff66',r:1});
+    }
+    a.px=x;a.py=y;
+    el.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%) rotate(${rot}rad)`;
+  });
+  /* beams */
+  fctx.clearRect(0,0,SW,SH);
+  if(disputeBeams){
+    const c2=P(claimOf('C2').x,claimOf('C2').y);
+    const ada=AGENTS.find(a=>a.n==='Ada'), rex=AGENTS.find(a=>a.n==='Rex');
+    [[ada,'#45f087'],[rex,'#ff5d6e']].forEach(([ag,col])=>{
+      const g=fctx.createLinearGradient(ag.px,ag.py,c2.x,c2.y);
+      g.addColorStop(0,col); g.addColorStop(1,col+'22');
+      fctx.strokeStyle=g; fctx.lineWidth=5; fctx.setLineDash([10,7]);
+      fctx.lineDashOffset=RM?0:-now*.02;
+      fctx.beginPath(); fctx.moveTo(ag.px,ag.py); fctx.lineTo(c2.x,c2.y); fctx.stroke();
+    });
+    fctx.setLineDash([]);
+  }
+  updatePartsStage(rdt*speed);
+  /* fireworks at finale */
+  if(finaleOn){ fwAccum+=rdt;
+    if(fwAccum>(RM?2.5:.55)){ fwAccum=0;
+      const cols=['#ffc94f','#54d8ff','#45f087','#ff5d6e','#ffffff'];
+      firework(innerWidth*(.12+Math.random()*.76), innerHeight*(.08+Math.random()*.35), cols[Math.random()*cols.length|0]); }
+  }
+  tctx.clearRect(0,0,innerWidth,innerHeight);
+  drawConstellation(rdt);
+  updatePartsTop(rdt);
+  drawRadar(rdt,seg>=1);
+}
+function updatePartsStage(dt){
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.age+=dt;if(p.age>=p.life){parts.splice(i,1);continue;}
+    p.x+=p.vx;p.y+=p.vy;const k=1-p.age/p.life;
+    fctx.globalAlpha=k;fctx.fillStyle=p.c;fctx.beginPath();fctx.arc(p.x,p.y,p.r*k+.3,0,6.28);fctx.fill();}
+  fctx.globalAlpha=1;
+}
+function updatePartsTop(dt){
+  for(let i=topParts.length-1;i>=0;i--){const p=topParts[i];p.age+=dt;if(p.age>=p.life){topParts.splice(i,1);continue;}
+    p.x+=p.vx;p.y+=p.vy;if(p.g)p.vy+=p.g;const k=1-p.age/p.life;
+    tctx.globalAlpha=k;tctx.fillStyle=p.c;tctx.beginPath();tctx.arc(p.x,p.y,p.r*k+.3,0,6.28);tctx.fill();}
+  tctx.globalAlpha=1;
+}
+requestAnimationFrame(frame);
+syncCounters();
+})();
+</script>

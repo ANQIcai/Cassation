@@ -1,0 +1,43 @@
+{
+ "status": "completed",
+ "continuation_ids": [
+  "v1_ChdOdnZsYXRQR0Vxci12ZElQLXNhX29RURIXTnZ2bGF0UEdFcXItdmRJUC1zYV9vUVE"
+ ],
+ "created": "2026-10-31T14:29:10Z",
+ "id": "v1_ChdOdnZsYXRQR0Vxci12ZElQLXNhX29RURIXTnZ2bGF0UEdFcXItdmRJUC1zYV9vUVE",
+ "model": "gemini-3.5-flash-lite",
+ "output_text": "{\n  \"ok\": false,\n  \"reason\": \"The question 'Is the sky blue?' has a well-established scientific answer involving Rayleigh scattering and does not require new empirical investigation to answer.\"\n}",
+ "service_tier": "standard",
+ "steps": [
+  {
+   "signature": "EmAKXgFpFH0TlS35DWzJQ+ifTTqd0l5kY1L2wearfMc+ExFhg+8TACFvy3Ni4wsRPLyEfX6y6myC4o2EJySFTJJT+WwU2lR19nnN5gnA1W7/quQgmIcHr3xKr/ogFUJO4JY=",
+   "type": "thought"
+  },
+  {
+   "content": [
+    {
+     "text": "{\n  \"ok\": false,\n  \"reason\": \"The question 'Is the sky blue?' has a well-established scientific answer involving Rayleigh scattering and does not require new empirical investigation to answer.\"\n}",
+     "type": "text"
+    }
+   ],
+   "type": "model_output"
+  }
+ ],
+ "updated": "2026-10-31T14:29:10Z",
+ "usage": {
+  "initial_input_tokens": 91,
+  "input_tokens_by_modality": [
+   {
+    "modality": "text",
+    "tokens": 27
+   }
+  ],
+  "total_cached_tokens": 0,
+  "total_input_tokens": 27,
+  "total_output_tokens": 44,
+  "total_thought_tokens": 0,
+  "total_tokens": 71,
+  "total_tool_use_tokens": 0
+ },
+ "object": "interaction"
+}

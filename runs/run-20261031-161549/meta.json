@@ -1,0 +1,23 @@
+{
+  "run_id": "run-20261031-161549",
+  "question": "Is my landlord right that the mould in my flat is harmless condensation?",
+  "mode": "live",
+  "started_at": "2026-10-31T16:15:49",
+  "finished_at": "2026-10-31T16:17:40",
+  "status": "ok",
+  "counts": {
+    "claims": 9,
+    "struck": 0,
+    "agents": 18,
+    "sources": 22,
+    "excluded": 3,
+    "verdicts": {
+      "EXCLUDED": 3,
+      "SUPPORTED": 3,
+      "CONTESTED": 1,
+      "REFUTED": 1,
+      "HUMAN_ADJUDICATED": 1
+    },
+    "events": 282
+  }
+}

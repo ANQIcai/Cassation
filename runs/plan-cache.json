@@ -1,0 +1,721 @@
+{
+ "before committing a gpu screening run: does cubic boron arsenide actually conduct heat at ~1300 w/mk at 300 k?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T13:04:34",
+  "graph": {
+   "question": "Before committing a GPU screening run: does cubic boron arsenide actually conduct heat at ~1300 W/mK at 300 K?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "Ab-initio theory (Lindsay, Broido & Reinecke, PRL 2013) predicts κ ≈ 2200 W/mK for defect-free cubic BAs at room temperature.",
+     "branch": "theory",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "State-of-the-art cubic BAs crystals show a measured room-temperature thermal conductivity of ~1300 W/mK.",
+     "branch": "measurement",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Early BAs crystals measured only ~200 W/mK, an order of magnitude below theory, because of defects (Lv et al., APL 2015).",
+     "branch": "measurement history",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Three independent groups reported κ ≈ 1000–1300 W/mK in Science in 2018 (Kang et al.; Li et al.; Tian et al.).",
+     "branch": "measurement",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Including four-phonon scattering lowers the theoretical ceiling from ~2200 to ~1400 W/mK (Feng, Lindsay & Ruan, PRB 2017).",
+     "branch": "theory",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "Point defects (arsenic vacancies, antisite pairs) are the dominant κ limiters in real BAs crystals.",
+     "branch": "defects",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "At ~1300 W/mK, BAs would outperform copper roughly 3× as a passive heat spreader for electronics cooling.",
+     "branch": "applications",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Cubic BAs is commercially available as wafer-scale substrates for thermal-management applications.",
+     "branch": "commercial availability",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "BAs synthesis remains limited to small (mm-scale) single crystals grown by chemical vapor transport.",
+     "branch": "commercial availability",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ },
+ "does cubic boron arsenide really conduct heat at ~1300 w/mk — or has that record been superseded?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T13:05:35",
+  "graph": {
+   "question": "Does cubic boron arsenide really conduct heat at ~1300 W/mK — or has that record been superseded?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "Ab-initio theory (Lindsay, Broido & Reinecke, PRL 2013) predicts κ ≈ 2200 W/mK for defect-free cubic BAs at room temperature.",
+     "branch": "theory",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "State-of-the-art cubic BAs crystals show a measured room-temperature thermal conductivity of ~1300 W/mK.",
+     "branch": "measurement",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Early BAs crystals measured only ~200 W/mK, an order of magnitude below theory, because of defects (Lv et al., APL 2015).",
+     "branch": "measurement history",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Three independent groups reported κ ≈ 1000–1300 W/mK in Science in 2018 (Kang et al.; Li et al.; Tian et al.).",
+     "branch": "measurement",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Including four-phonon scattering lowers the theoretical ceiling from ~2200 to ~1400 W/mK (Feng, Lindsay & Ruan, PRB 2017).",
+     "branch": "theory",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "Point defects (arsenic vacancies, antisite pairs) are the dominant κ limiters in real BAs crystals.",
+     "branch": "defects",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "At ~1300 W/mK, BAs would outperform copper roughly 3× as a passive heat spreader for electronics cooling.",
+     "branch": "applications",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Cubic BAs is commercially available as wafer-scale substrates for thermal-management applications.",
+     "branch": "commercial availability",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "BAs synthesis remains limited to small (mm-scale) single crystals grown by chemical vapor transport.",
+     "branch": "commercial availability",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ },
+ "is the lattice thermal conductivity of cubic boron arsenide really ~2200 w/mk, and should i gate a gpu screening run on that number?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T15:07:30",
+  "graph": {
+   "question": "Is the lattice thermal conductivity of cubic boron arsenide really ~2200 W/mK, and should I gate a GPU screening run on that number?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "Ab-initio theory (Lindsay, Broido & Reinecke, PRL 2013) predicts κ ≈ 2200 W/mK for defect-free cubic BAs at room temperature.",
+     "branch": "theory",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "State-of-the-art cubic BAs crystals show a measured room-temperature thermal conductivity of ~1300 W/mK.",
+     "branch": "measurement",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Early BAs crystals measured only ~200 W/mK, an order of magnitude below theory, because of defects (Lv et al., APL 2015).",
+     "branch": "measurement history",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Three independent groups reported κ ≈ 1000–1300 W/mK in Science in 2018 (Kang et al.; Li et al.; Tian et al.).",
+     "branch": "measurement",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Including four-phonon scattering lowers the theoretical ceiling from ~2200 to ~1400 W/mK (Feng, Lindsay & Ruan, PRB 2017).",
+     "branch": "theory",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "Point defects (arsenic vacancies, antisite pairs) are the dominant κ limiters in real BAs crystals.",
+     "branch": "defects",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "At ~1300 W/mK, BAs would outperform copper roughly 3× as a passive heat spreader for electronics cooling.",
+     "branch": "applications",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Cubic BAs is commercially available as wafer-scale substrates for thermal-management applications.",
+     "branch": "commercial availability",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "BAs synthesis remains limited to small (mm-scale) single crystals grown by chemical vapor transport.",
+     "branch": "commercial availability",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ },
+ "is the thermal conductivity of cubic boron arsenide really ~1300 w/mk at room temperature?": {
+  "mode": "live",
+  "recorded_at": "2026-10-31T15:28:03",
+  "graph": {
+   "question": "Is the thermal conductivity of cubic boron arsenide really ~1300 W/mK at room temperature?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "Three-phonon scattering ab initio calculations in 2013 predicted cubic boron arsenide (c-BAs) has a room-temperature thermal conductivity exceeding 2000 W/mK.",
+     "branch": "theory predictions",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c2",
+     "text": "Including four-phonon scattering in 2017–2018 ab initio models reduced the predicted room-temperature thermal conductivity of pristine c-BAs to approximately 1250–1400 W/mK.",
+     "branch": "theory predictions",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c3",
+     "text": "In 2018, Kang et al. measured a room-temperature thermal conductivity of ~1300 W/mK in defect-free regions of c-BAs using time-domain thermoreflectance (TDTR).",
+     "branch": "measurement history",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c4",
+     "text": "Simultaneous 2018 TDTR studies by Li et al. and Tian et al. measured room-temperature c-BAs thermal conductivity peaking at ~1000–1160 W/mK rather than 1300 W/mK.",
+     "branch": "measurement history",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Point defects, arsenic vacancies, and carbon or silicon impurities in chemical-vapor-transport grown c-BAs suppress bulk thermal conductivity below 1300 W/mK Across millimeter scales.",
+     "branch": "sample and method",
+     "depends_on": [
+      "c3",
+      "c4"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c6",
+     "text": "TDTR spot sizes of 5–10 micrometers and high modulation frequencies suffer from ballistic phonon transport artifacts that complicate extracting intrinsic bulk thermal conductivity in c-BAs.",
+     "branch": "sample and method",
+     "depends_on": [
+      "c3",
+      "c4"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c7",
+     "text": "Subsequent 2022–2023 experimental studies measuring high-mobility c-BAs confirmed local room-temperature thermal conductivities reaching 1200–1300 W/mK.",
+     "branch": "measurement history",
+     "depends_on": [
+      "c5",
+      "c6"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Cubic boron arsenide simultaneously exhibits ambipolar carrier mobility above 1500 cm²/Vs and thermal conductivity over 1200 W/mK at 300 K, outperforming silicon for electronics cooling.",
+     "branch": "commercial outlook",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c9",
+     "text": "Commercial wafer-scale synthesis of defect-free c-BAs remains unachieved as of 2024 due to sub-millimeter crystal growth limits in chemical vapor transport.",
+     "branch": "commercial outlook",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    }
+   ],
+   "est_total_cost_gbp": 0.63,
+   "est_agents": 18
+  }
+ },
+ "is an air fryer really cheaper to run than an electric oven?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T15:56:26",
+  "graph": {
+   "question": "Is an air fryer really cheaper to run than an electric oven?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "A typical air fryer uses ~0.4-0.5 kWh per use, versus ~1.0-1.5 kWh for a full-size electric oven cooking a comparable meal.",
+     "branch": "energy per use",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "Running an air fryer costs about 10p per typical use, versus about 35p for an electric oven at 2025 UK electricity prices.",
+     "branch": "running cost",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Air fryers preheat in 2-3 minutes versus 10-15 minutes for an electric oven, cutting total cooking time for most dishes.",
+     "branch": "cooking time",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Which? 2024 testing found air fryers cheaper than an electric oven for small portions such as chips, chicken and roast vegetables.",
+     "branch": "cooking time",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Typical UK electricity costs about 24.5p per kWh under the 2025 price cap, the unit rate behind both appliance estimates.",
+     "branch": "running cost",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "An air fryer basket holds roughly 3-6 litres, so family-sized meals need several rounds where one oven cycle cooks everything at once.",
+     "branch": "batch size",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "A household swapping four oven sessions a week for the air fryer saves roughly £50 a year on electricity.",
+     "branch": "savings",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Air fryers are always healthier than cooking the same food in an oven.",
+     "branch": "claims in ads",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "The 'healthier' marketing line rests on using less oil than deep frying — it says nothing about running cost.",
+     "branch": "claims in ads",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ },
+ "is an air fryer really cheaper to run than ~1300 w/mk at room temperature?": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T16:14:18",
+  "graph": {
+   "question": "Is an air fryer really cheaper to run than ~1300 W/mK at room temperature?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "A typical air fryer uses ~0.4-0.5 kWh per use, versus ~1.0-1.5 kWh for a full-size electric oven cooking a comparable meal.",
+     "branch": "energy per use",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "Running an air fryer costs about 10p per typical use, versus about 35p for an electric oven at 2025 UK electricity prices.",
+     "branch": "running cost",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Air fryers preheat in 2-3 minutes versus 10-15 minutes for an electric oven, cutting total cooking time for most dishes.",
+     "branch": "cooking time",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Which? 2024 testing found air fryers cheaper than an electric oven for small portions such as chips, chicken and roast vegetables.",
+     "branch": "cooking time",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Typical UK electricity costs about 24.5p per kWh under the 2025 price cap, the unit rate behind both appliance estimates.",
+     "branch": "running cost",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "An air fryer basket holds roughly 3-6 litres, so family-sized meals need several rounds where one oven cycle cooks everything at once.",
+     "branch": "batch size",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "A household swapping four oven sessions a week for the air fryer saves roughly £50 a year on electricity.",
+     "branch": "savings",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Air fryers are always healthier than cooking the same food in an oven.",
+     "branch": "claims in ads",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "The 'healthier' marketing line rests on using less oil than deep frying — it says nothing about running cost.",
+     "branch": "claims in ads",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ },
+ "is my landlord right that the mould in my flat is harmless condensation?": {
+  "mode": "live",
+  "recorded_at": "2026-10-31T16:16:02",
+  "graph": {
+   "question": "Is my landlord right that the mould in my flat is harmless condensation?",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "The 2009 WHO Guidelines for Indoor Air Quality state that no safe minimum threshold exists for indoor mould exposure, linking all dampness-related mould to elevated respiratory risks.",
+     "branch": "health risks",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c2",
+     "text": "Common condensation-fed indoor fungi like Cladosporium, Penicillium, and Aspergillus release allergens, beta-glucans, and VOCs that trigger asthma exacerbations and rhinitis even in non-atopic adults.",
+     "branch": "health risks",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c3",
+     "text": "The 2020 Rochdale coronal inquest into the death of two-year-old Awaab Ishak ruled that prolonged exposure to household condensation mould caused fatal acute airway oedema.",
+     "branch": "health risks",
+     "depends_on": [
+      "c1",
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c4",
+     "text": "Under BS 5250:2021, indoor mould germinates when surface relative humidity exceeds 80% for prolonged periods, typically caused by thermal bridging or inadequate mechanical extract ventilation.",
+     "branch": "building physics",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Approved Document F (2021 edition) of the UK Building Regulations mandates continuous extract rates of at least 15 L/s in bathrooms and 30 L/s in kitchens to prevent condensation.",
+     "branch": "building physics",
+     "depends_on": [
+      "c4"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c6",
+     "text": "The Housing Ombudsman's October 2021 Spotlight Report on Damp and Mould instructed UK landlords to stop attributing condensation to tenant 'lifestyle' where structural or ventilation defects exist.",
+     "branch": "legal liability",
+     "depends_on": [
+      "c4",
+      "c5"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c7",
+     "text": "The Homes (Fitness for Human Habitation) Act 2018 makes UK landlords legally liable for severe condensation damp and mould under the Housing Health and Safety Rating System (HHSRS).",
+     "branch": "legal liability",
+     "depends_on": [
+      "c1",
+      "c6"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Under the Social Housing (Regulation) Act 2023 (Awaab's Law), UK social landlords must investigate reported damp and mould hazards within 14 calendar days.",
+     "branch": "legal liability",
+     "depends_on": [
+      "c3",
+      "c7"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c9",
+     "text": "The global commercial market for smart indoor air quality and humidity sensors exceeded $4.5 billion in 2023 due to rising residential demand for automated mould prevention.",
+     "branch": "commercial outlook",
+     "depends_on": [],
+     "est_cost_gbp": 0.07
+    }
+   ],
+   "est_total_cost_gbp": 0.63,
+   "est_agents": 18
+  }
+ },
+ "ping": {
+  "mode": "mock",
+  "recorded_at": "2026-10-31T16:19:43",
+  "graph": {
+   "question": "ping",
+   "claims": [
+    {
+     "id": "c1",
+     "text": "A typical air fryer uses ~0.4-0.5 kWh per use, versus ~1.0-1.5 kWh for a full-size electric oven cooking a comparable meal.",
+     "branch": "energy per use",
+     "depends_on": [],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c2",
+     "text": "Running an air fryer costs about 10p per typical use, versus about 35p for an electric oven at 2025 UK electricity prices.",
+     "branch": "running cost",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.08
+    },
+    {
+     "id": "c3",
+     "text": "Air fryers preheat in 2-3 minutes versus 10-15 minutes for an electric oven, cutting total cooking time for most dishes.",
+     "branch": "cooking time",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c4",
+     "text": "Which? 2024 testing found air fryers cheaper than an electric oven for small portions such as chips, chicken and roast vegetables.",
+     "branch": "cooking time",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c5",
+     "text": "Typical UK electricity costs about 24.5p per kWh under the 2025 price cap, the unit rate behind both appliance estimates.",
+     "branch": "running cost",
+     "depends_on": [
+      "c1"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c6",
+     "text": "An air fryer basket holds roughly 3-6 litres, so family-sized meals need several rounds where one oven cycle cooks everything at once.",
+     "branch": "batch size",
+     "depends_on": [
+      "c3"
+     ],
+     "est_cost_gbp": 0.06
+    },
+    {
+     "id": "c7",
+     "text": "A household swapping four oven sessions a week for the air fryer saves roughly £50 a year on electricity.",
+     "branch": "savings",
+     "depends_on": [
+      "c2"
+     ],
+     "est_cost_gbp": 0.07
+    },
+    {
+     "id": "c8",
+     "text": "Air fryers are always healthier than cooking the same food in an oven.",
+     "branch": "claims in ads",
+     "depends_on": [
+      "c7"
+     ],
+     "est_cost_gbp": 0.05
+    },
+    {
+     "id": "c9",
+     "text": "The 'healthier' marketing line rests on using less oil than deep frying — it says nothing about running cost.",
+     "branch": "claims in ads",
+     "depends_on": [
+      "c8"
+     ],
+     "est_cost_gbp": 0.05
+    }
+   ],
+   "est_total_cost_gbp": 0.9,
+   "est_agents": 18
+  }
+ }
+}

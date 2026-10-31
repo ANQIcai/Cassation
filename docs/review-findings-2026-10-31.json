@@ -1,0 +1,232 @@
+{
+ "source": "tribunal-scaffold-build workflow wf_79754069-797, 2026-10-31",
+ "findings": [
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/engine.py",
+   "line": 342,
+   "severity": "major",
+   "summary": "A jury ruling with an unknown claim_id crashes the whole run. POST /api/jury (server/main.py:509-514) builds JuryRuling from the client body without validating claim_id against the pending JuryRequest; the engine then calls _first_dependent(active, ruling.claim_id, ...) whose fallback `next(c for c in active if c.id == ruled_id)` raises StopIteration -> RuntimeError('coroutine raised StopIteration') -> finish('error'). Probe-confirmed: run.complete{status:'error'}, no verdict. One stale or buggy POST (e.g. a second client, automation against the wrong run, or a claim id typo) kills a live run unrecoverably.",
+   "suggestion": "Validate at the gate: in ServerGates.resolve_jury (or api_jury) accept only the pending request's claim_id (store jury_req when await_jury is called), and/or in the engine use jury_req.claim_id instead of ruling.claim_id for state/replan, with a safe default in _first_dependent (return None and skip the tiebreaker)."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/engine.py",
+   "line": 152,
+   "severity": "major",
+   "summary": "Heartbeat task is NOT cancelled when the engine task is cancelled - only on normal/exception exits. run_tribunal's try/except catches Exception, but CancelledError (BaseException) skips finish(), orphaning the _heartbeat task, which keeps emitting cost.update into the still-open Bus file handle forever. Probe-confirmed: after task.cancel(), cost.update events and trace.jsonl bytes keep growing and asyncio.all_tasks() shows an orphan _heartbeat. Trigger on demo day: the rehearsed replay hotkey R (POST /api/replay) mid-run calls stop_active_source -> run_task.cancel() (server/main.py:148-157); the aborted run's trace is then polluted with an endless cost.update tail (garbage if later replayed from the docket), and one leaked task + fd per aborted run. Bus.close() is also never called by the server even on clean completion.",
+   "suggestion": "Wrap the engine body in try/finally with `if heartbeat: heartbeat.cancel()` (and ideally bus.close()) in the finally, or catch BaseException, re-raising CancelledError after cleanup. Server-side, engine_wrapper's finally could also close the bus."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/engine.py",
+   "line": 297,
+   "severity": "major",
+   "summary": "A tiebreaker timeout can erase the human adjudication - the demo's 'permanently stamped human-adjudicated' promise. When the ruled claim has no runnable dependents, _first_dependent targets the ruled claim itself; if that tiebreaker leaf times out/errors, _run_leaf adds it to `excluded` and emits claim.state{excluded} over human_ruled, and _enforce_verdict_chips (line 386-397) then drops the model's HUMAN_ADJUDICATED chip and stamps EXCLUDED ('Agent timed out...') despite a recorded jury.ruling. Probe-confirmed (c7/c8/c9 struck, tiebreaker timeout: c2 history ends human_ruled->excluded, final chip EXCLUDED). Plausible live: Argon's graph shape is unknown and leaf timeouts are the expected failure mode.",
+   "suggestion": "In _run_leaf, don't mark the claim excluded for TIEBREAKER failures (or pass a flag); alternatively in _enforce_verdict_chips, let a ruling on the claim (dossier.ruling) take precedence over `excluded`. The tiebreaker is additive evidence - its failure shouldn't retract a human ruling."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/engine.py",
+   "line": 250,
+   "severity": "minor",
+   "summary": "The borderline-confidence jury safety net can select a claim already in `excluded` (advocate ok, skeptic timed out -> claim marked EXCLUDED). The jury then opens on a half-investigated claim, and after the ruling the same _enforce_verdict_chips path as the tiebreaker bug replaces HUMAN_ADJUDICATED with EXCLUDED - the human is asked to rule and the ruling is discarded from the verdict.",
+   "suggestion": "Filter the candidates: `if f.confidence < cfg.borderline_confidence and f.claim_id not in excluded`."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/engine.py",
+   "line": 314,
+   "severity": "minor",
+   "summary": "EXCLUDED claims' surviving findings still feed synthesis: the Dossier filters findings only by status=='ok' and keeps excluded claims in dossier.graph, so e.g. an advocate's evidence for a claim whose skeptic timed out enters the digest and (in gemini_client.synthesize, lines 419-427) the numbered citation list - the brief can cite evidence for a claim whose chip honestly says 'timed out - excluded'. Struck claims are correctly filtered (line 310); excluded ones are not.",
+   "suggestion": "Also drop findings whose claim_id is in `excluded` (and optionally those claims from dossier.graph.claims), mirroring the struck-claim filter, so chip and brief tell the same story."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/engine.py",
+   "line": 97,
+   "severity": "minor",
+   "summary": "_run_leaf swallows every leaf exception with a bare `except Exception: status = 'error'` - zero logging. On kickoff day this makes live failures (quota 429 vs structured-output validation vs shim bug) indistinguishable: every one is just 'ERROR' on a card. The first 30 minutes of the hour-by-hour plan are exactly when this diagnostic matters most.",
+   "suggestion": "log.exception (or stash repr(e)[:200] into the agent.done payload as an extra field - the Event envelope allows extras and the UI ignores unknown keys) so live-mode failures are diagnosable without code changes under time pressure."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/server/main.py",
+   "line": 297,
+   "severity": "minor",
+   "summary": "Two divergent replay implementations: orchestrator/replay.py (the PROTOCOL 'Module interfaces' one, Bus-based) is dead code on the server path - server replay is stream_trace, which re-implements cadence, mode rewrite and replay.info injection directly against the Hub. Both currently conform (no disk re-append, labeled correctly), but 'replay is the live code path / cannot bit-rot' holds only for the server copy; a hackathon-day fix to one will not fix the other (cosmetic drift already exists: stream_trace restamps seq from 0, Bus from 1).",
+   "suggestion": "Either route server replay through replay.replay_run with a Bus(record=False) + pump_bus (same as live), or delete/mark orchestrator/replay.py as script-only so nobody patches the wrong one on the day."
+  },
+  {
+   "lens": "protocol",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/server/main.py",
+   "line": 175,
+   "severity": "minor",
+   "summary": "The kill -9 'replayable prefix' guarantee has a hole: a single event larger than the ~8KB text-IO buffer (verdict.complete with the full brief easily qualifies) can be partially written at kill time, leaving a torn final JSON line. load_events (here) and replay.load_trace (replay.py:27) then raise on the whole file: POST /api/replay returns {ok:true} but the stream_trace task dies silently (exception never retrieved) and nothing plays; scan_trace degrades the docket row to an empty 'running' summary. The flush-per-line discipline in bus.py is correct - only the loaders fail to honor the prefix.",
+   "suggestion": "In both loaders, wrap per-line parsing in try/except and skip (or stop at) the first unparseable line, so a truncated trace replays its valid prefix instead of failing silently."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/server/main.py",
+   "line": 286,
+   "severity": "major",
+   "summary": "Fallback layer 4 / hotkey R replays the NEWEST run dir, which during a mid-run network death is the just-crashed partial live run, not a golden. resolve_trace(\"\") sorts runs/run-* by name and picks the first with a trace.jsonl; the active live run's dir (created at POST /api/run, trace flushed per event) is always the newest. PROTOCOL's non-negotiable says 'replay hotkey R -> POST /api/replay with newest golden', and the beat-sheet fallback trigger #3 assumes R lands on a golden. As written, the one scenario R exists for (total API death at ~1:00 in) replays the broken half-trace: board rebuilds, dies at the same spot, no takeover/jury/verdict.",
+   "suggestion": "Make the empty-run_id resolution skip STATE.run_id and any run whose trace lacks a verdict.complete (or whose meta status != 'ok'). Cheapest: in resolve_trace's candidates loop, filter `d.name != STATE.run_id` and check meta.json status. Alternatively add a GOLDEN_RUN_ID setting (--golden flag) that R resolves to, falling back to newest-complete."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/orchestrator/gemini_client.py",
+   "line": 290,
+   "severity": "major",
+   "summary": "Fallback layer 3 (plan section 8.3, 'Argon slow at decompose -> locally cached plan seeds the claim board instantly; Advocates/Skeptics still run live') has zero code support. decompose() has no timeout and no cached-plan path; engine.py awaits client.decompose unguarded, so a stalled Argon decompose stalls the whole demo with only the judge ticker moving. This layer is also the stated mitigation for risk #2 (Argon latency blowout) and is key-independent logic that could be built and tested now, unlike the rest of gemini_client.",
+   "suggestion": "Add a cfg-driven decompose fallback: wrap client.decompose in asyncio.wait_for(~12-15s in live mode); on timeout load a cached ClaimGraph JSON (e.g. fixtures/plan-bas.json, recordable from any mock run) for the prepared question and continue \u2014 leaves still run live, and the strike beat survives because striking is engine-enforced. Also add it to docs/demo/kickoff-checklist.md so the cached plan gets refreshed from the first real decompose."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/orchestrator/mock_client.py",
+   "line": 387,
+   "severity": "minor",
+   "summary": "The mock brief narrative still discusses a struck claim's content: _brief_chunks is static, so when c4 (the 2018 Science trio) is struck \u2014 as in BOTH golden traces \u2014 the brief still says 'the 2018 Science trio [3][4][5] closed most of the gap'. The claim id is absent but the substance is not. Plan beat 2:05 and Q&A answers #3/#6 lean on 'the struck branch is absent from the brief' as the anti-canned proof; in a forced-replay-during-judging (posture 8.6) a close reader of the golden's brief can catch the struck branch's content in the narrative. (The engine-side enforcement for live runs is fine: the Dossier excludes struck claims and the synthesis prompt forbids mentioning them.)",
+   "suggestion": "synthesize() already computes `active`; thread it into _brief_chunks and drop/replace the trio sentence (and citations [3][5]) when 'c4' not in active, the four-phonon sentence when 'c5' not in active, etc., for the strikable claims the goldens use. Then re-record the two goldens."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "docs/demo/beat-sheet.md",
+   "line": 50,
+   "severity": "minor",
+   "summary": "The 2:25 close line asserts unconditionally 'The same question is running on Deep Research overnight as the appendix', but nothing in the codebase fires a deep-research background job (no reference to deep-research/background=True anywhere in tribunal/ or scripts/), and the kickoff checklist has no item for it. Plan section 4 scopes it honestly ('mention in one sentence ONLY if it's actually running'); the beat-sheet as printed would have Oskar saying something false if it never gets wired.",
+   "suggestion": "Either add a fire-and-forget deep-research kickoff stub (gemini_client or a tiny scripts/deep_research.py invoked at run start in live mode, VERIFY-AT-KICKOFF-marked, plus a kickoff-checklist checkbox) or bracket the beat-sheet line as conditional the way the plan does."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/web/style.css",
+   "line": 477,
+   "severity": "minor",
+   "summary": "In the DISPUTED takeover, the green->amber->red state-flip chip (.tk-chip) is 20px mono \u2014 the smallest primary element on the overlay (title ~102px, claim ~26px, quotes ~24px at 1280px). The plan's graft 6 calls the flip a 'giant green->red state change (legible at 3 m)'; in the screenshot the CONTESTED chip reads as a small pill and the colour journey SUPPORTED->CHALLENGED->CONTESTED is easy to miss from the back of a room. The rest of the takeover is genuinely 3m-legible.",
+   "suggestion": "Scale .tk-chip to e.g. font: 800 clamp(26px, 3vw, 40px)/1 var(--mono) with proportionally bigger padding/border, and consider a brief scale/flash transition on the .red class so the flip itself moves."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/web/style.css",
+   "line": 401,
+   "severity": "minor",
+   "summary": "At the 1280x720 worst case the approval modal shows only ~8 of 9 claim rows \u2014 the approval-modal.png screenshot confirms C9 is clipped below the fold (dialog max-height 88vh, ~63px/row). The strike beat hands a judge the trackpad for 'two bounded clicks'; the weakly-sourced commercial claims (c8/c9) are the natural strike targets and one of them requires scrolling to see. The max-height:760px media query tightens the board but not the modal rows.",
+   "suggestion": "In the @media (max-height: 760px) block, tighten .arow (padding ~5px, font-size 13.5px) and/or .d-head so 9-10 rows fit without scroll; a 10-claim live decompose should also fit."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/web/app.js",
+   "line": 204,
+   "severity": "minor",
+   "summary": "Striking does not cascade and the approval modal hides dependency info: engine.py only removes the struck claim itself (contract-conformant \u2014 PROTOCOL says 'a struck claim never gets an agent spawned'), but the demo script says 'strike one BRANCH dead'. If a judge strikes c1 (which c2/c3/c5 depend on), five dependent claims visibly still run, and the modal rows don't render depends_on (the board cards do), so the judge can't see what hangs off what when choosing.",
+   "suggestion": "Render depends_on in each .arow (data is already in the approval.request payload), e.g. a muted 'needs C1' tag; and either narrate the beat as 'strike any claim' or have the UI auto-toggle dependents when a parent is struck (client-side only \u2014 the struck_claim_ids list keeps the engine contract unchanged)."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "runs/",
+   "severity": "minor",
+   "summary": "Docket wall content is present (8 case files render via /api/runs) but weak for its beat: 5 of 8 rows are identical ~7s smoke-test runs of the same question with identical verdict chips, every row is the same BAs topic, and the 5 pre-reorder traces (120327..121044) replay with the jury panel trapped under the takeover (known issue). The 0:55 patter claims 'Nine cases tried today' (beat-sheet line 32) over 8 rows, and the plan's Docket graft exists to prove 'it works beyond one question'.",
+   "suggestion": "Before the day: delete or archive 4 of the 5 identical smoke runs, and record 2-3 additional goldens \u2014 scripts/record_goldens.py already parameterizes questions, and docs/demo/backup-questions.md has the other topics once mock content (or live runs) support them. Adjust the 'nine cases' line to match the real count."
+  },
+  {
+   "lens": "demo-beats",
+   "file": "tribunal/web/app.js",
+   "line": 378,
+   "severity": "minor",
+   "summary": "Provenance chips (plan graft 11: 'every finding is labeled with which agent/model/search produced it') are only partial in the UI: agent.spawn carries the model name in its payload, but the agent row renders only role tag + agent_id; no element on a card or evidence snippet names gemini-3.8-flash / flash-lite (only the judge strip names argon). Evidence provenance (grounded vs model-reported) IS labeled. This is the pre-empt for the provenance probe, so the model attribution should be findable on screen.",
+   "suggestion": "Cheapest: set row.title = `${p.model}` (tooltip) and append the model to the agent-tag text on hover/done, or add a one-line legend ('ADV/SKP = gemini-3.8-flash \u00b7 clerk = flash-lite') to the cost strip or header."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/prompts/advocate.md",
+   "line": 3,
+   "severity": "critical",
+   "summary": "All seven prompt files in tribunal/orchestrator/prompts/ declare themselves 'loaded verbatim' with a str.replace template convention, but no code loads them: gemini_client.py ships its own divergent inline prompts (lines 85-151) and grep shows zero references to the prompts/ directory anywhere in tribunal/. The files carry the day-of calibration dials the plan depends on \u2014 skeptic strength anchors (THE dispute-rate dial paired with dispute_threshold=0.55), advocate confidence anchors (drives the jury-on-borderline safety net at 0.6), the decompose strikeable-branch rule (demo beat #1), clerk score anchors, the 40-word quote cap sized to the takeover overlay, and all anti-fabrication rules. During calibration hour (H4:00-5:00, Gate C) editing these files will silently change nothing.",
+   "suggestion": "Pick one side before kickoff: (a) make GeminiModelClient load prompts/*.md at init with str.replace substitution per each file's stated convention (placeholders already enumerated per file; synthesis needs the ===VERDICT_JSON=== split parser, replan needs the JSON {notes, adjustments, tiebreaker} parser and mandate->context wiring the file's CLIENT NOTES promise), or (b) add a loud 'REFERENCE ONLY \u2014 live prompts live in gemini_client.py' header to each file and port the anchors/rules into the inline prompts. Either way add a kickoff-checklist line so the decision is checked at H0."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/gemini_client.py",
+   "line": 234,
+   "severity": "major",
+   "summary": "No retry/backoff on any streamed call: _stream calls create(stream=True) exactly once, while only _create (guardrail, clerk, verdict-chips) has the 0/1.5/4.0s retry ladder. Decompose, every grounded Advocate/Skeptic/Tiebreaker leaf, replan and synthesis \u2014 i.e. all the calls the plan's risk #1 says will hit 429/RESOURCE_EXHAUSTED at 8-14 concurrent grounded requests \u2014 get zero retries. A quota wave excludes claims en masse (engine marks leaf errors 'excluded') and a transient 429 on decompose or synthesis kills the whole run with status 'error'. TRIBUNAL-PLAN \u00a75 and risk #1 explicitly promise exponential backoff on the fan-out.",
+   "suggestion": "Wrap the stream-open (the await self._aio.interactions.create(stream=True, **body) and first-event pull) in the same quota-matched retry ladder as _create, e.g. factor the for-attempt loop into a helper both paths share. Leaf retries must stay inside the engine's 20s wait_for budget, so cap leaf retries at one short backoff and keep the full ladder for the judge calls."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/gemini_client.py",
+   "line": 90,
+   "severity": "major",
+   "summary": "The inline _DECOMPOSE_PROMPT hardcodes '8-10 claims' and ids 'c1..c10', ignoring cfg.max_leaves \u2014 the adaptive leaf count (14->10->8->batched-6) that is pivot-gate criterion #1's main lever and exactly what judge_decompose.md's {max_claims} placeholder (fed from cfg.max_leaves) exists for. If max_leaves drops to 6 at H0, the judge still plans 8-10 claims and engine.py:183 silently slices to the first 6, leaving planned claims forever 'pending' on the board and stamped 'Synthesis returned no verdict for this claim' (CONTESTED, 0.0) by _enforce_verdict_chips \u2014 visibly broken on stage. The inline prompt also drops judge_decompose.md rule 5 (exactly one cheap branch that NOTHING depends_on, kept last in the list), which the branch-strike demo beat leans on; 'include at least one branch about practical/commercial status' does not guarantee it is dependency-free or bottom-of-modal. Cost constants also disagree three ways: inline ~0.05-0.08/claim vs 0.10 in the file vs engine _COST implying ~0.066.",
+   "suggestion": "Format cfg.max_leaves into the decompose prompt ('at most {max_claims} claims') and port rule 5's dependency-free strikeable-branch requirement verbatim; align the per-claim cost constant with engine._COST so the approval modal's estimate matches the live cost strip."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/gemini_client.py",
+   "line": 251,
+   "severity": "minor",
+   "summary": "_stream reads thought-summary text only from delta.text, but the vendored Deep Research quickstart (Get_started_Deep_Research.ipynb) reads thought summaries from chunk.delta.content.text \u2014 a shape under which dtext would be empty and the judge ticker (plan.delta / agent.delta thinking lines) would go silent with no error. The code's VERIFY comment and checklist \u00a72 cover the delta TYPE string ('thought' vs 'thought_summary') and do assert 'delta.text holds the summary text', but the code itself is not defensive about the nesting the way it is about the type string.",
+   "suggestion": "Make the text read as defensive as the type check: dtext = getattr(delta, 'text', None) or getattr(getattr(delta, 'content', None), 'text', None) or ''. Costs one line now, saves a silent-ticker hunt at kickoff."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/docs/demo/kickoff-checklist.md",
+   "line": 3,
+   "severity": "minor",
+   "summary": "The checklist's coverage claim is scoped to gemini_client.py only, but grep finds one more # VERIFY-AT-KICKOFF in code: tribunal/server/main.py:364, the lazy GeminiModelClient import in start_engine_run (live server mode). No checkbox exercises the live SERVER path \u2014 \u00a70/\u00a77 only cover the live CLI run \u2014 even though this exact line hid the demo-breaking class-name bug the integration pass just fixed. The demo runs through the server, not the CLI.",
+   "suggestion": "Add to \u00a77: '[ ] Live run through the server path: python -m tribunal.server (no --mock), POST /api/run on the BAs question; approve + jury via the UI; /brief and /api/qr render from the live run.' Optionally reword the header to 'every VERIFY-AT-KICKOFF in the repo'."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/gemini_client.py",
+   "line": 147,
+   "severity": "minor",
+   "summary": "_CHIPS_PROMPT offers only SUPPORTED/REFUTED/CONTESTED/HUMAN_ADJUDICATED, but its claim_ids list (dossier.graph.claims = active claims) still contains timeout-EXCLUDED claims, so the model is forced to mislabel them with a verdict the engine then discards and overwrites in _enforce_verdict_chips. Harmless to the final Verdict (engine-corrected) but burns chain tokens and invites schema-literal confusion since the response_format schema (_ChipsOut -> ClaimVerdict) permits all six values including the two the prompt forbids.",
+   "suggestion": "Either drop excluded claim ids from the claim_ids list (engine appends their chips anyway), or extend the prompt: 'use EXCLUDED for claims marked excluded in the dossier'. Never list STRUCK ids (already correct \u2014 dossier graph is pre-filtered)."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/gemini_client.py",
+   "line": 429,
+   "severity": "minor",
+   "summary": "No HTTP timeout configured for the thinking_level=high synthesis call, while docs/guide.txt (official builder guide, 'Clean up legacy parameters' item 4) explicitly says to 'increase HTTP client timeouts to 15 to 20 minutes for complex high thinking prompts'. The installed SDK's create() accepts a per-call timeout= kwarg. Streaming mitigates total-duration limits but read-timeouts between chunks during a long pre-stream thinking phase on argon are exactly the failure the guide warns about, and neither the code nor the kickoff checklist mentions it.",
+   "suggestion": "Pass timeout= on the judge calls (decompose/synthesize) or configure the Client's http_options once in __init__, and add a checklist \u00a74 line: 'confirm SDK default timeout survives a high-thinking synthesis; raise per guide (15-20 min) if the stream drops pre-first-token'."
+  },
+  {
+   "lens": "gemini-api",
+   "file": "/celestia/oskar/imperial-gemini/tribunal/orchestrator/gemini_client.py",
+   "line": 51,
+   "severity": "minor",
+   "summary": "FIXTURES_DIR = Path('fixtures') is CWD-relative: launched from any directory other than the repo root, fixture dumps scatter elsewhere or silently vanish (_record_fixture swallows all exceptions), defeating the flight-recorder discipline and the checklist \u00a70 item 'confirm files appear' \u2014 someone could be watching an empty repo-root fixtures/ while files land in another CWD.",
+   "suggestion": "Anchor it: FIXTURES_DIR = Path(__file__).resolve().parents[2] / 'fixtures' (repo root), matching how the server resolves RUNS_DIR."
+  }
+ ],
+ "integration_remaining_issues": [
+  "Assertion interpretation: the task said the struck claim id must NEVER appear in the 'verdict claim list', but PROTOCOL/schemas deliberately include a STRUCK verdict literal and engine._enforce_verdict_chips force-appends an honest STRUCK chip (which the UI renders greyed/struck and the brief lists under 'Struck at approval'). e2e_mock therefore asserts: never in agent.spawn, never in agent.evidence, present in verdict.complete ONLY as the forced STRUCK chip with zero citation_ids, and absent from brief_markdown. If literal absence is wanted, that is a contract change to schemas/PROTOCOL.",
+  "runs/run-20261031-120327..121044 (engine-builder smoke tests, ~7s each) and hand-authored run-20261031-153042 remain on the docket wall; the five 1203xx-121044 traces predate the takeover.hide reordering, so replaying them shows the jury panel under the takeover until the recorded ruling arrives. Keep or delete at the orchestrating session's discretion; the two goldens and 153042 have the correct ordering.",
+  "The 4s takeover dwell is engine wall-clock in live mode too (divided by cfg.mock_speed, which is 1.0 live) \u2014 intended for the demo beat, but it counts toward the 2:15 end-to-end pivot-gate budget.",
+  "Server behavior worth knowing on the day: a WS client connecting between runs briefly receives the PREVIOUS run's backlog until the new run's pump resets the hub. The UI handles it (run.start resets the board), but any automation must sync on run.start first, as scripts/e2e_server.py now does.",
+  "scripts/screenshot_tour.py requires system python3 (Playwright is not in .venv) and --speed 1 to catch the red CONTESTED chip during the takeover dwell.",
+  "Golden traces are stand-ins from MockModelClient; per the armor report's open issue, the mock's dispute direction (Kang 2018 spot vs Li 2018 bulk) does not yet mirror the armor doc's preferred 2018-vs-2025 Niyikiza pair \u2014 mock content change is pending the orchestrating session's call."
+ ],
+ "extra_items_from_orchestrator": [
+  {
+   "lens": "armor",
+   "severity": "major",
+   "file": "tribunal/orchestrator/mock_client.py",
+   "summary": "Align the guaranteed mock dispute with the corrected physics: Kang et al. Science 2018 ~1300 W/mK (natural abundance) vs Niyikiza et al. Materials Today 2025 >2100 W/mK via chemically purified arsenic (isotope enrichment alone is only ~8-13%, ~1500). The new number is HIGHER than the old headline. See docs/demo/bas-controversy-armor.md. Rehearsal patter must match the armor doc."
+  },
+  {
+   "lens": "armor",
+   "severity": "minor",
+   "file": "tribunal/orchestrator/mock_client.py",
+   "summary": "Prefer open-access mirrors (arXiv, OSTI, PMC, Physics Today) over science.org links for mock citation URLs where available - science.org 403s programmatic fetches and paywalls phone taps."
+  },
+  {
+   "lens": "demo-beats",
+   "severity": "minor",
+   "file": "docs/demo/beat-sheet.md",
+   "summary": "Make the 'Deep Research overnight appendix' line conditional - only say it if the background job is actually running (plan section 4 honesty rule)."
+  }
+ ]
+}
