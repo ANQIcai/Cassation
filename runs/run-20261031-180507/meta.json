@@ -1,0 +1,21 @@
+{
+  "run_id": "run-20261031-180507",
+  "question": "Does the amyloid-beta assembly Aβ*56 cause memory loss in Alzheimer's disease?",
+  "mode": "mock",
+  "started_at": "2026-10-31T18:05:07",
+  "finished_at": "2026-10-31T18:05:35",
+  "status": "ok",
+  "counts": {
+    "claims": 9,
+    "struck": 0,
+    "agents": 19,
+    "sources": 14,
+    "excluded": 0,
+    "verdicts": {
+      "SUPPORTED": 7,
+      "HUMAN_ADJUDICATED": 1,
+      "REFUTED": 1
+    },
+    "events": 234
+  }
+}

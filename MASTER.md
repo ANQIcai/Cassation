@@ -50,6 +50,8 @@ Argon = Judge (decompose contested question → typed claim board; mid-run re-pl
 
 - **RENAME: TRIBUNAL → CASSATION (16:3x UTC, user order).** Package dir `tribunal/`→`cassation/` (run cmd now `python -m cassation.server`), all code/UI/docs/golden-trace strings case-aware swapped; archive PDF keeps its historical filename. Verified post-rename: e2e_mock PASS, e2e_server PASS, browser title + header show CASSATION. Historical entries above predate the rename (old tarball names read "cassation" due to the blanket sed — the actual S3 objects keep their original tribunal names). **Package: `imperial-gemini-cassation-FINAL-v4.tar.gz`** in transfers. (Claude, 2026-10-31)
 
+- **ALTERNATIVE LIGHT VERSION (17:3x UTC), per Angela's brief (`docs/BRIEF-ui-light-verdict-disputed.md`):** branch `feature/ui-light` (main untouched = current version). Three changes exactly: AI-Studio-white theme (token swap, 45/45 contrast pairs ≥4.5:1, three brief tokens darkened to pass — green #137333, red #C5221F, amber #8F4E00), Consensus-meter verdict hero (headline = first sentence of synthesis + segmented HOLDS/CONTESTED/REFUTED/RULED bar + frozen counters), Ace-Attorney "DISPUTED!" punch-in. e2e both PASS on the branch; zero console errors at 720p+1080p; light screenshots in `docs/screens-light/`. **Alternative video: `docs/demo/cassation-demo-light.mp4`** (99s, light cards) + S3 `transfers/cassation-demo-light.mp4`; branch source archive: S3 `transfers/cassation-source-light.tar.gz`. Dark version remains: main + `cassation-demo.mp4`. (Claude, 2026-10-31)
+
 ## Next steps (human / on the day)
 
 1. Pull the tarball onto the laptop, follow `README.md` setup, do one full mock run + hotkey-R replay as rehearsal.
