@@ -33,5 +33,3 @@ Open **http://localhost:8990**, type a question (or tap a sample), press Enter. 
 | Live, real inputs | Runs live on any typed question. Agents that time out are excluded honestly and the run continues; total network death = one keypress to a same-format replay. |
 
 **Architecture** (contracts in `cassation/PROTOCOL.md`): `cassation/orchestrator/` — engine state machine, Gemini Interactions-API client (streamed, retried, degeneration-repaired), mock client; `cassation/server/` — FastAPI + WebSocket (backlog-then-tail); `cassation/web/` — vanilla JS courtroom UI, no build step. Checks: `scripts/e2e_mock.py`, `scripts/e2e_server.py`.
-
-Built by Oskar Ljungdell with Claude Code as pair-programmer, 31 Oct 2026.
