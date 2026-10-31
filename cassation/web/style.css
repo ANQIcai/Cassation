@@ -1448,6 +1448,44 @@ a.cite:hover { background: rgba(212, 167, 60, .3); }
   box-shadow: 0 4px 24px rgba(0, 0, 0, .5);
 }
 
+/* ------------------------------------------- demo polish: plain-word slots */
+
+.slot { font: 700 14px/1 var(--sans); letter-spacing: .01em; }
+.slot .slot-lbl { font-weight: 700; }
+.slot[data-state="idle"] { opacity: .7; }
+.slot.skp[data-outcome="held"] { color: var(--green); background: rgba(63, 174, 106, .08); }
+.slot.skp[data-outcome="broke"] { color: #fff; background: var(--red); border-color: var(--red); }
+.slot.skp[data-outcome="disputed"] { color: var(--amber); background: rgba(224, 169, 62, .1); }
+
+/* ------------------------------------------- demo polish: verdict on stage */
+
+#verdict-tally { margin: 2px 0 14px; }
+.tally-bar { display: flex; gap: 3px; height: 40px; border-radius: 8px; overflow: hidden; }
+.tally-bar i {
+  font: 800 15px/40px var(--sans); font-style: normal; letter-spacing: .05em;
+  text-transform: uppercase; text-align: center; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: max-content;
+  padding: 0 12px;
+  animation: tally-grow .5s cubic-bezier(.2, .9, .3, 1) backwards;
+}
+@keyframes tally-grow { from { flex-grow: 0; opacity: 0; } }
+.tally-bar .t-held { background: var(--green); }
+.tally-bar .t-broke { background: var(--red); }
+.tally-bar .t-you { background: var(--gold); color: var(--ink-on-accent); }
+.tally-bar .t-open { background: var(--amber); color: var(--ink-on-accent); }
+.tally-words { margin-top: 8px; font: 700 18px/1.35 var(--sans); color: var(--ink); }
+
+/* at verdict time the brief column widens and the board recedes */
+#stage { transition: grid-template-columns .5s ease; }
+body.verdict-stage { --col-d: min(54vw, 1040px); }
+body.verdict-stage #board { opacity: .55; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+body.verdict-stage #board .c-agents, body.verdict-stage #board .c-live,
+body.verdict-stage #board .c-deps { display: none; }
+body.verdict-stage #board .c-text { font-size: 15px; -webkit-line-clamp: 2; }
+body.verdict-stage #verdict-pane { padding: 18px 28px 24px; }
+body.verdict-stage #verdict-body { font-size: 21px; }
+body.verdict-stage #verdict-body h2 { font-size: clamp(28px, 2.4vw, 42px); line-height: 1.2; margin: 6px 0 14px; }
+
 /* --------------------------------------------------- 720p compact mode */
 
 /* compact laptop heights: tighten CHROME only — the type stays big */
