@@ -64,7 +64,12 @@
     </div>
 
     <div id="verdict-pane" role="tabpanel" hidden>
-      <div id="verdict-tally" hidden></div>
+      <!-- verdict hero: ONE sentence + ONE bar (Consensus-meter pattern) -->
+      <div id="verdict-hero" hidden>
+        <p id="verdict-headline" class="vh-headline"></p>
+        <div id="verdict-meter" class="vh-meter" role="img" aria-label="Verdict breakdown"></div>
+        <div id="verdict-legend" class="vh-legend"></div>
+      </div>
       <div id="verdict-chips"></div>
       <div class="vp-head">Verdict <span id="vp-status">streaming&hellip;</span></div>
       <div id="verdict-body"><p class="vp-empty">The verdict is written at the end of the trial.</p></div>
@@ -88,10 +93,9 @@
     </form>
     <div id="run-error" class="run-error" role="alert"></div>
     <div class="ex-chips" id="ex-chips">
-      <button class="ex-chip" type="button">Does the amyloid-beta assembly Aβ*56 cause memory loss in Alzheimer's disease?</button>
+      <button class="ex-chip" type="button">Does the amyloid-beta assembly A&beta;*56 cause memory loss in Alzheimer&#39;s disease?</button>
       <button class="ex-chip" type="button">Is it safe to charge an e-bike battery indoors overnight?</button>
       <button class="ex-chip" type="button">Does overpaying the mortgage beat investing the spare cash?</button>
-      <button class="ex-chip" type="button">Can someone clone my car key fob from the street?</button>
       <button class="ex-chip" type="button">Is my landlord right that the mould in my flat is harmless condensation?</button>
     </div>
   </div>
@@ -152,12 +156,11 @@
   </div>
 </div>
 
-<!-- DISPUTED full-bleed takeover (kept design, new tokens; z above everything) -->
+<!-- DISPUTED takeover: one sharp interruption — the word, then the two quote
+     cards face off (no second label, no chip; z above everything but the mode chip) -->
 <div id="takeover" hidden>
-  <div class="tk-title">DISPUTED</div>
-  <div class="tk-meta" id="tk-meta" hidden><span class="tk-cid" id="tk-cid"></span></div>
+  <div class="tk-title">DISPUTED!</div>
   <div class="tk-claim" id="takeover-claim"></div>
-  <div class="tk-flip"><span id="tk-chip" class="tk-chip">SUPPORTED</span></div>
   <div class="tk-quotes">
     <div class="tk-quote" id="takeover-left"></div>
     <div class="tk-vs">vs</div>

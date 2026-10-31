@@ -2,24 +2,9 @@
 
 **A research court run by a Gemini agent swarm** — built in one day for the *Build with Gemini 4 Argon* hackathon (Imperial College London × Google DeepMind), Track 1: Frontier Agents.
 
-Ask a question you're about to act on ("Does the amyloid-beta assembly Aβ\*56 cause memory loss in Alzheimer's disease?"). **Gemini 4 Argon** sits as Judge: it decomposes the question into a claim board, a human approves the plan (and can strike any branch — struck claims provably never run), then ~10 parallel **gemini-3.8-flash** agents fan out with live Google Search grounding: green **Advocates** defend each claim, red **Skeptics** exist only to kill them. A **flash-lite** Clerk scores contradictions; anything genuinely contested goes to a human **Jury** — the agents don't get to settle it. The Judge re-plans on the ruling (same `previous_interaction_id` chain) and streams a cited verdict. Every event is one line in a JSONL trace that is also the WebSocket feed, so any run replays pixel-identically (hotkey `R`) — the demo's offline fallback is the live code path.
+Ask a question you're about to act on ("Is it safe to charge an e-bike battery indoors overnight?"). **Gemini 4 Argon** sits as Judge: it decomposes the question into a claim board, a human approves the plan (and can strike any branch — struck claims provably never run), then ~10 parallel **gemini-3.8-flash** agents fan out with live Google Search grounding: green **Advocates** defend each claim, red **Skeptics** exist only to kill them. A **flash-lite** Clerk scores contradictions; anything genuinely contested goes to a human **Jury** — the agents don't get to settle it. The Judge re-plans on the ruling (same `previous_interaction_id` chain) and streams a cited verdict. Every event is one line in a JSONL trace that is also the WebSocket feed, so any run replays pixel-identically (hotkey `R`) — the demo's offline fallback is the live code path.
 
 ![Cassation claim board](docs/screens/cassation-board.png)
-
-## The demo case: a famous result that did not hold
-
-In 2006 a *Nature* paper (Lesné et al.) reported that a protein assembly, **Aβ\*56**, causes memory loss. It
-became one of the most-cited Alzheimer's papers of the century and supported the amyloid hypothesis behind
-years of drug work. In 2022 neuroscientist **Matthew Schrag** found signs of image manipulation in it and in
-related papers, working on his own time for months. **Nature retracted the paper in June 2024**; all authors
-agreed except the first author.
-
-Cassation is built for the moment before you build on a result like that: a funder, a lab or a company about to
-spend money on a claim. Ask the question, and the Skeptics go looking for exactly what Schrag found by hand.
-*(Schrag is the real-world example of the problem, not a user of Cassation.)*
-
-Sources: [Nature retraction notice](https://doi.org/10.1038/s41586-024-07691-8) ·
-[Science on the investigation](https://www.science.org/content/article/alzheimer-s-scientist-resigns-after-university-finds-data-integrity-concerns-papers)
 
 ## Install & run
 
@@ -48,3 +33,5 @@ Open **http://localhost:8990**, type a question (or tap a sample), press Enter. 
 | Live, real inputs | Runs live on any typed question. Agents that time out are excluded honestly and the run continues; total network death = one keypress to a same-format replay. |
 
 **Architecture** (contracts in `cassation/PROTOCOL.md`): `cassation/orchestrator/` — engine state machine, Gemini Interactions-API client (streamed, retried, degeneration-repaired), mock client; `cassation/server/` — FastAPI + WebSocket (backlog-then-tail); `cassation/web/` — vanilla JS courtroom UI, no build step. Checks: `scripts/e2e_mock.py`, `scripts/e2e_server.py`.
+
+Built by Oskar Ljungdell with Claude Code as pair-programmer, 31 Oct 2026.

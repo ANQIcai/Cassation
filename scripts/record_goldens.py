@@ -20,10 +20,12 @@ from e2e_server import boot_server, drive_run, stop_server
 
 # (question variant, strike_index, gate_delay_s)
 GOLDENS = [
-    ("Is it safe to charge an e-bike battery indoors overnight "
-     "at ~1300 W/mK room temperature?", 0, 4.0),
-    ("Is it safe to charge an e-bike battery indoors overnight?", 1, 3.0),
-    ("Is it safe to charge an e-bike battery indoors overnight?", 2, 3.5),
+    ("Does the amyloid-beta assembly Aβ*56 cause memory loss "
+     "in Alzheimer's disease (per the 2006 Nature paper)?", 0, 4.0),
+    ("Does the amyloid-beta assembly Aβ*56 cause memory loss "
+     "in Alzheimer's disease?", 1, 3.0),
+    ("Does the amyloid-beta assembly Aβ*56 cause memory loss "
+     "in Alzheimer's disease?", 2, 3.5),
 ]
 
 

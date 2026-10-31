@@ -335,9 +335,9 @@ function makeCard(claim) {
     </div>
     <p class="c-text">${esc(claim.text)}</p>
     <div class="c-agents">
-      <span class="slot adv" data-state="idle"><i class="slot-ind"></i><b class="slot-lbl">Defender waiting</b><em></em></span>
-      <span class="slot skp" data-state="idle"><i class="slot-ind"></i><b class="slot-lbl">Attacker waiting</b><em></em></span>
-      <span class="slot tie" data-state="idle" hidden><i class="slot-ind"></i><b class="slot-lbl">Tie-break</b><em></em></span>
+      <span class="slot adv" data-state="idle"><i class="slot-ind"></i>ADV<em></em></span>
+      <span class="slot skp" data-state="idle"><i class="slot-ind"></i>SKP<em></em></span>
+      <span class="slot tie" data-state="idle" hidden><i class="slot-ind"></i>TIE<em></em></span>
     </div>
     <div class="c-live"></div>
     ${deps}
@@ -458,33 +458,28 @@ function paintSlots(claimId) {
     const live = list.some((a) => a.status === "live");
     const bad = list.length && list.every((a) => a.status === "timeout" || a.status === "error");
     slot.dataset.state = live ? "live" : bad ? "err" : "done";
-    slot.dataset.outcome = "";
     slot.title = list.map((a) => `${role} ${a.id} · ${a.model || ""} · ${a.status}`).join("\n");
-    const lbl = slot.querySelector(".slot-lbl");
     const em = slot.querySelector("em");
-    em.textContent = "";
-    /* plain words a judge can read from 3 m — no ADV/SKP codes, no bare decimals */
+    if (live) { em.textContent = ""; continue; }
+    if (bad) { em.textContent = list[0].status === "timeout" ? "t/o" : "err"; continue; }
     if (role === "advocate") {
       const n = ev.filter((e) => e.stance !== "refute").length;
-      lbl.textContent = live ? "Defending…" : bad ? "Defender timed out"
-        : n ? `Defended · ${n} ${n === 1 ? "source" : "sources"}` : "Defended · no source";
+      em.textContent = n ? `· ${n} ${n === 1 ? "quote" : "quotes"}` : "";
     } else if (role === "skeptic") {
-      if (live) { lbl.textContent = "Attacking…"; }
-      else if (bad) { lbl.textContent = "Attacker timed out"; }
-      else {
-        const st = Math.max(0, ...ev.filter((e) => e.stance === "refute").map((e) => e.strength || 0));
-        const [txt, oc] = !st ? ["Attacked — found nothing", "held"]
-          : entry.state === "supported" ? ["Attacked — held", "held"]
-          : (entry.state === "contested" || entry.state === "human_ruled") ? ["Attacked — disputed", "disputed"]
-          : entry.state === "refuted" ? ["Attacked — broke it", "broke"]
-          : entry.state === "challenged" ? ["Attacked — clerk weighing", "disputed"]
-          : ["Attacked", ""];
-        lbl.textContent = txt;
-        slot.dataset.outcome = oc;
-        if (st) slot.title += `\nchallenge strength ${st.toFixed(1)} of 1`;
+      const st = Math.max(0, ...ev.filter((e) => e.stance === "refute").map((e) => e.strength || 0));
+      if (st) {
+        // a bare decimal says nothing from 3 m — name the outcome the board
+        // already knows from the claim's state
+        const outcome = entry.state === "supported" ? " — held off"
+          : (entry.state === "contested" || entry.state === "human_ruled") ? " — contested"
+          : entry.state === "refuted" ? " — upheld" : "";
+        em.textContent = `· attack ${st.toFixed(1)}${outcome}`;
+        em.title = `challenge strength ${st.toFixed(1)} of 1`;
+      } else {
+        em.textContent = "";
       }
     } else {
-      lbl.textContent = live ? "Tie-break…" : bad ? "Tie-break timed out" : "Tie-break done";
+      em.textContent = "";
     }
   }
 }
@@ -609,6 +604,77 @@ function renderVerdictChips() {
 const VCOLOR = { SUPPORTED: "var(--green)", REFUTED: "var(--red)", CONTESTED: "var(--amber)",
                  HUMAN_ADJUDICATED: "var(--gold)", EXCLUDED: "var(--grey)", STRUCK: "var(--grey)" };
 
+/* ---- verdict hero: ONE sentence + ONE bar (Consensus-meter pattern) ----
+   Headline source: the FIRST SENTENCE of the synthesis brief — leading
+   markdown headings (and the "**Question:**" echo line, which restates the
+   question already shown in the header) are stripped first. */
+function verdictHeadline(md) {
+  const lines = String(md || "").split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const t = lines[i].trim();
+    if (!t || /^#{1,6}\s/.test(t) || /^\*\*question:?\*\*/i.test(t)) { i++; continue; }
+    break;
+  }
+  const para = [];
+  for (; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!t || /^#{1,6}\s/.test(t)) break;
+    para.push(t);
+  }
+  let text = para.join(" ")
+    .replace(/\[\d+\]/g, "")                        // citation markers
+    .replace(/\*\*(.+?)\*\*/g, "$1")                // bold
+    .replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, "$1$2")  // italics
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .trim();
+  const m = text.match(/^.*?[.!?](?=\s|$)/s);       // decimal-safe sentence end
+  return (m ? m[0] : text).trim();
+}
+
+/* the four segments of the one bar — counts come from the final verdicts */
+const HERO_SEGS = [
+  { verdict: "SUPPORTED",         lbl: "HOLDS",          cls: "g" },
+  { verdict: "CONTESTED",         lbl: "CONTESTED",      cls: "a" },
+  { verdict: "REFUTED",           lbl: "REFUTED",        cls: "r" },
+  { verdict: "HUMAN_ADJUDICATED", lbl: "RULED BY YOU ⚖", cls: "gold" },
+];
+
+function heroLegend() {
+  const counts = {};
+  S.verdicts.forEach((v) => { counts[v.verdict] = (counts[v.verdict] || 0) + 1; });
+  const parts = HERO_SEGS.filter((s) => counts[s.verdict])
+    .map((s) => `<b class="${s.cls}">${counts[s.verdict]} ${esc(s.lbl)}</b>`);
+  const c = S.lastCost;
+  const agents = (c.agents_done || 0) + (c.agents_live || 0);
+  const frozen = `<span class="vh-frozen">${c.sources || 0} sources · ${agents} agents · ` +
+    `£${(c.est_gbp || 0).toFixed(2)} · ${fmtClock(S.maxT)}</span>`;
+  $("verdict-legend").innerHTML = `${parts.join(" · ")}${parts.length ? " — " : ""}${frozen}`;
+}
+
+function renderVerdictHero() {
+  const counts = {};
+  S.verdicts.forEach((v) => { counts[v.verdict] = (counts[v.verdict] || 0) + 1; });
+  const headline = verdictHeadline(S.synthesisBuf);
+  const segs = HERO_SEGS.filter((s) => counts[s.verdict]);
+  if (!headline && !segs.length) return;
+  $("verdict-headline").textContent = headline;
+  const meter = $("verdict-meter");
+  meter.innerHTML = segs.map((s) =>
+    `<div class="vh-seg ${s.cls}" style="flex:${counts[s.verdict]} 1 0px" title="${counts[s.verdict]} ${esc(s.lbl)}">` +
+    `<span>${counts[s.verdict]} ${esc(s.lbl)}</span></div>`).join("");
+  heroLegend();
+  $("verdict-hero").hidden = false;
+  // label inside a segment only when it fits — the legend carries it otherwise
+  requestAnimationFrame(() => {
+    meter.querySelectorAll(".vh-seg").forEach((seg) => {
+      const lbl = seg.firstElementChild;
+      seg.classList.toggle("tight", lbl.scrollWidth > seg.clientWidth - 10);
+    });
+  });
+}
+
 function renderLedger(verdicts) {
   const box = $("verdict-ledger");
   box.innerHTML = `<div class="ledger-head">Confidence ledger</div>`;
@@ -631,26 +697,6 @@ function renderLedger(verdicts) {
   box.hidden = false;
 }
 
-/* one big plain-word tally bar: how many claims held, broke, or were ruled by you */
-function renderTally(verdicts) {
-  const box = $("verdict-tally");
-  const n = { held: 0, broke: 0, you: 0, open: 0, out: 0 };
-  verdicts.forEach((v) => {
-    const k = { SUPPORTED: "held", REFUTED: "broke", HUMAN_ADJUDICATED: "you",
-                CONTESTED: "open", STRUCK: "out", EXCLUDED: "out" }[v.verdict] || "open";
-    n[k]++;
-  });
-  const total = verdicts.length - n.out;
-  if (!total) { box.hidden = true; return; }
-  const seg = (k, lbl) => n[k] ? `<i class="t-${k}" style="flex:${n[k]}">${n[k]} ${lbl}</i>` : "";   // label sits in the words line too
-  const words = [n.held && `${n.held} held up`, n.broke && `${n.broke} broke under attack`,
-                 n.you && `${n.you} ruled by you`, n.open && `${n.open} still disputed`,
-                 n.out && `${n.out} struck`].filter(Boolean).join(" · ");
-  box.innerHTML = `<div class="tally-bar">${seg("held", "held")}${seg("broke", "broke")}${seg("you", "ruled by you")}${seg("open", "disputed")}</div>
-    <div class="tally-words">${esc(words)}</div>`;
-  box.hidden = false;
-}
-
 function renderCompletion() {
   const box = $("completion-card");
   const c = S.lastCost;
@@ -666,7 +712,7 @@ function renderCompletion() {
       <span class="ct"><b>£${(c.est_gbp || 0).toFixed(2)}</b><i>estimate</i></span>
       <span class="ct"><b>${c.sources || 0}</b><i>sources</i></span>
       <span class="ct"><b>${c.agents_done || 0}</b><i>agents</i></span>
-      <span class="ct"><b>${fmtClock(S.maxT)}</b><i>${S.mode === "replay" ? "replayed" : "elapsed"}</i></span>
+      <span class="ct"><b>${fmtClock(S.maxT)}</b><i>elapsed</i></span>
     </div>
     ${qr}
     <div class="cc-meta">trace: runs/${esc(S.runId || "?")}/trace.jsonl · press R to replay the latest case</div>`;
@@ -931,9 +977,14 @@ function openJury(req) {
 // ------------------------------------------------------------------ takeover
 
 function showTakeover(p) {
+  // one message only: the word DISPUTED!, then the two cards face off.
+  // Each label carries its side's year: THE RECORD SAYS · 2023 vs THE SKEPTIC FOUND · 2024
+  const yearOf = (side) =>
+    (String(side.source_label || "").match(/\b(19|20)\d{2}\b/) || [""])[0];
   const fill = (id, side) => {
     const lbl = id === "takeover-left" ? "The record says" : "The skeptic found";
-    $(id).innerHTML = `<span class="tk-lbl">${lbl}</span>“${esc(side.quote || "")}”<span class="src">${side.url
+    const y = yearOf(side);
+    $(id).innerHTML = `<span class="tk-lbl">${lbl}${y ? ` · ${y}` : ""}</span>“${esc(side.quote || "")}”<span class="src">${side.url
       ? `<a href="${esc(side.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(side.source_label || side.url)}</a>`
       : esc(side.source_label || "")}</span>`;
   };
@@ -941,19 +992,8 @@ function showTakeover(p) {
   fill("takeover-right", p.right || {});
   const claim = S.claims.get(p.claim_id);
   $("takeover-claim").textContent = claim ? claim.text : (p.claim_id || "");
-  // name the claim so the takeover ties to the board + the "ruling on C2" banner
-  const cid = (p.claim_id || "").toUpperCase();
-  const branch = (claim?.branch || "").toUpperCase();
-  $("tk-cid").textContent = branch ? `${cid} · ${branch}` : cid;
-  $("tk-meta").hidden = !cid;
-  const chip = $("tk-chip");
-  chip.className = "tk-chip";
-  chip.textContent = "SUPPORTED";
   S.takeoverTimers.forEach(clearTimeout);
-  S.takeoverTimers = [
-    setTimeout(() => { chip.className = "tk-chip amber"; chip.textContent = "CHALLENGED"; }, 900),
-    setTimeout(() => { chip.className = "tk-chip red"; chip.textContent = "CONTESTED"; }, 1800),
-  ];
+  S.takeoverTimers = [];
   $("takeover").hidden = false;
 }
 
@@ -997,7 +1037,6 @@ async function replayRun(runId) {
     // the POST confirms the source switch — paint REPLAY now, so the recorded
     // run.start's original mode never flashes on the chip
     S.replayPending = true;
-    S.replaySpeed = r.speed || 1;
     setMode("replay");
     $("docket-overlay").hidden = true;
     toast(`REPLAY — ${r.run_id}`);
@@ -1033,6 +1072,10 @@ function resetRun() {
   $("record-feed").innerHTML = "";
   $("jump-live").hidden = true;
   $("jump-live").textContent = "jump to live ↓";
+  $("verdict-hero").hidden = true;
+  $("verdict-headline").textContent = "";
+  $("verdict-meter").innerHTML = "";
+  $("verdict-legend").innerHTML = "";
   $("verdict-chips").innerHTML = "";
   $("verdict-body").innerHTML = `<p class="vp-empty">The verdict is written at the end of the trial.</p>`;
   $("verdict-ledger").hidden = true;
@@ -1050,9 +1093,6 @@ function resetRun() {
   $("ct-sources").textContent = "0";
   $("ct-agents").textContent = "0 live · 0 done";
   $("ct-clock").textContent = "0:00";
-  $("ct-clock").nextElementSibling.textContent = "elapsed";
-  document.body.classList.remove("verdict-stage");
-  $("verdict-tally").hidden = true;
 }
 
 function setMode(mode, extra) {
@@ -1060,17 +1100,6 @@ function setMode(mode, extra) {
   const chip = $("mode-chip");
   chip.className = `mode-chip mode-${mode}`;
   $("mode-text").textContent = mode.toUpperCase() + (extra ? ` · ${extra}` : "");
-}
-
-/* "Replay ×1 of a recorded mock run (scripted, compressed timings) — original took 0:28" */
-function replayLine(elapsed) {
-  const o = S.replayOf || {};
-  const sp = S.replaySpeed && S.replaySpeed !== 1 ? ` ×${S.replaySpeed}` : "";
-  const dur = fmtClock(o.dur || elapsed);
-  const kind = o.mode === "live" ? `live run took ${dur}`
-    : o.mode === "mock" ? `recorded MOCK run (scripted timings, ${dur}) — a live run takes ~2–3 min`
-    : `recorded run took ${dur}`;
-  return `Case closed — replay${sp} · ${kind}.`;
 }
 
 function advSub() {
@@ -1104,18 +1133,6 @@ const HANDLERS = {
   "replay.info": (p) => {
     const recAt = (p.recorded_at_iso || "").slice(11, 16);
     setMode("replay", recAt ? `rec ${recAt}` : (p.original_run_id || ""));
-    /* honest labelling: say what kind of run is being replayed and how long it
-       really took, from the docket (meta.json / trace) — never let a 0:28 mock
-       recording pass for a live 2–3 min run */
-    S.replayOf = { id: p.original_run_id, mode: null, dur: null };
-    $("ct-clock").nextElementSibling.textContent = "replay clock";
-    fetch("/api/runs").then((r) => r.json()).then((runs) => {
-      const m = (runs || []).find((x) => x.run_id === p.original_run_id);
-      if (m && S.replayOf && S.replayOf.id === p.original_run_id) {
-        S.replayOf.dur = m.duration_s || null;
-        S.replayOf.mode = m.mode || null;
-      }
-    }).catch(() => {});
   },
 
   "guardrail.result": (p) => {
@@ -1369,10 +1386,9 @@ const HANDLERS = {
     S.synthesisBuf = p.brief_markdown || S.synthesisBuf;
     $("verdict-body").innerHTML = mdToHtml(dedupeVerdictTitle(S.synthesisBuf));
     $("vp-status").textContent = "complete";
+    renderVerdictHero();
     renderVerdictChips();
     if ((p.verdicts || []).length) renderLedger(p.verdicts);
-    renderTally(p.verdicts || []);
-    document.body.classList.add("verdict-stage");   // verdict takes the stage
     const counts = {};
     (p.verdicts || []).forEach((v) => { counts[v.verdict] = (counts[v.verdict] || 0) + 1; });
     const summary = Object.entries(counts)
@@ -1401,21 +1417,20 @@ const HANDLERS = {
     S.frozen = true;
     const elapsed = p.elapsed_s || S.maxT;
     $("ct-clock").textContent = fmtClock(elapsed);
-    if (S.mode === "replay") $("ct-clock").nextElementSibling.textContent = "replayed";
     // counters settle: one gold pulse at run end
     $("counters").classList.add("settle");
     setTimeout(() => $("counters").classList.remove("settle"), 1000);
     if (p.status === "ok") {
-      const line = S.mode === "replay" ? replayLine(elapsed)
-        : `Case closed — verdict filed in ${fmtClock(elapsed)}${S.mode === "mock" ? " (scripted mock timings)" : ""}.`;
-      narrate(line);
-      rec("sys", esc(line), { cls: "dim" });
+      narrate(`Case closed — verdict filed in ${fmtClock(elapsed)}.`);
+      rec("sys", `Case closed — verdict filed in ${fmtClock(elapsed)}.`, { cls: "dim" });
     } else {
       narrate(`Run ended: ${p.status}.`, true);
       rec("sys", `Run ended: ${esc(p.status || "")}.`, { cls: "hl-red" });
     }
     $("jump-live").textContent = "jump to latest ↓";   // nothing is live any more
     $("vp-status").textContent = "complete";
+    // re-freeze the hero legend on the final counters (cost/clock just settled)
+    if (!$("verdict-hero").hidden) heroLegend();
     renderCompletion();
     toast(`Run complete (${p.status}) — ${fmtClock(elapsed)}`);
   },

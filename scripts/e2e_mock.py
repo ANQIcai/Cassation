@@ -42,7 +42,8 @@ from cassation.orchestrator.schemas import (
     RunConfig,
 )
 
-QUESTION = ("Is it safe to charge an e-bike battery indoors overnight?")
+QUESTION = ("Does the amyloid-beta assembly Aβ*56 cause memory loss "
+            "in Alzheimer's disease?")
 
 _failures: list[str] = []
 

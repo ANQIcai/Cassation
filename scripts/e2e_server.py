@@ -157,8 +157,8 @@ async def drive_run(base: str, question: str, strike: bool = True,
 # --------------------------------------------------------------------- checks
 
 async def run_checks(base: str, port: int) -> str:
-    question = ("Is it safe to charge an e-bike battery indoors "
-                "overnight at ~1300 W/mK room temperature?")
+    question = ("Does the amyloid-beta assembly Aβ*56 cause memory loss "
+                "in Alzheimer's disease (per the 2006 Nature paper)?")
     run_id, struck, tap = await drive_run(base, question, probe_bad_jury=True)
     print(f"run {run_id} complete: {len(tap.events)} WS events, struck={struck}")
     check(True, "jury ruling with unknown claim_id rejected with 400 (gate)")
